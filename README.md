@@ -10,8 +10,17 @@ my-app/
 │   ├── index.html
 │   └── src/{main.jsx,App.jsx,index.css}
 └── server/
-    └── index.js
+    ├── index.js              # app setup, mounts /api, serves client/dist in prod
+    ├── routes/
+    │   ├── index.js          # API barrel -- mount each resource router here
+    │   └── todos.js          # /api/todos
+    ├── controllers/
+    │   └── todosController.js  # request handlers + data access
+    └── middleware/
 ```
+
+Adding an endpoint: create `server/routes/<thing>.js`, add its handlers in
+`server/controllers/`, then mount the router in `server/routes/index.js`.
 
 ## Run it
 
