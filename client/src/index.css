@@ -1,0 +1,56 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color-scheme: dark light;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
+main {
+  width: 100%;
+  max-width: 32rem;
+  padding: 2rem 1.25rem;
+}
+
+form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+input {
+  flex: 1;
+}
+
+input,
+button {
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+
+li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+}
+
+li button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+  padding: 0 0.25rem;
+}
