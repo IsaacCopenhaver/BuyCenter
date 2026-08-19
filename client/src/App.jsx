@@ -1,47 +1,25 @@
-import { useEffect, useState } from 'react'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { AuthProvider } from './auth/AuthContext.jsx'
+import ProtectedRoute from './routes/ProtectedRoute.jsx'
+import Login from './pages/Login.jsx'
+import Dashboard from './pages/Dashboard.jsx'
 
 export default function App() {
-  const [todos, setTodos] = useState([])
-  const [draft, setDraft] = useState('')
-
-  useEffect(() => {
-    fetch('/api/todos')
-      .then((r) => r.json())
-      .then(setTodos)
-  }, [])
-
-  async function addTodo(e) {
-    e.preventDefault()
-    if (!draft.trim()) return
-    const res = await fetch('/api/todos', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: draft }),
-    })
-    setTodos([...todos, await res.json()])
-    setDraft('')
-  }
-
-  async function removeTodo(id) {
-    await fetch(`/api/todos/${id}`, { method: 'DELETE' })
-    setTodos(todos.filter((t) => t.id !== id))
-  }
-
   return (
-    <main>
-      <h1>my-app</h1>
-      <form onSubmit={addTodo}>
-        <input value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Add a todo..." />
-        <button>Add</button>
-      </form>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>
-            {todo.title}
-            <button onClick={() => removeTodo(todo.id)}>&times;</button>
-          </li>
-        ))}
-      </ul>
-    </main>
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          {/* The index is the login page. */}
+          <Route path="/" element={<Login />} />
+
+          {/* Everything nested here requires a signed-in user. */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/app" element={<Dashboard />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
