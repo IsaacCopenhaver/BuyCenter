@@ -1,10 +1,27 @@
+import dotenv from 'dotenv'
+dotenv.config()
+
 import express from 'express'
 import path from 'node:path'
 import fs from 'node:fs'
 import apiRoutes from './routes/index.js'
+import session from 'express-session'
+import passport from 'passport'
+import { initializePassport } from './config/passport.js'
+
+const sess = {
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false
+}
+
+initializePassport(passport)
 
 const app = express()
 app.use(express.json())
+app.use(session(sess))
+app.use(passport.initialize())
+app.use(passport.session())
 
 app.use('/api', apiRoutes)
 
@@ -19,3 +36,4 @@ if (fs.existsSync(dist)) {
 
 const port = process.env.PORT || 3000
 app.listen(port, () => console.log(`http://localhost:${port}`))
+
