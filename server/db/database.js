@@ -1,4 +1,5 @@
 import { Sequelize } from 'sequelize'  // Import the Sequelize class
+import './env.js'
 
 // Create one shared PostgreSQL database instance
 // Connection URL should come from the environment
