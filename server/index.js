@@ -8,6 +8,10 @@ import apiRoutes from './routes/index.js'
 import session from 'express-session'
 import passport from 'passport'
 import { initializePassport } from './config/passport.js'
+import sequelize from './db/database.js'
+
+await sequelize.authenticate()
+await sequelize.sync({ alter: true })
 
 const sess = {
   secret: process.env.SESSION_SECRET,

@@ -7,6 +7,9 @@
     "dev:web": "npm --prefix client run dev",
     "build": "npm --prefix client run build",
     "start": "node server/index.js",
+    "db:sync": "node server/db/sync.js",
+    "db:sync:alter": "node server/db/sync.js --alter",
+    "db:sync:force": "node server/db/sync.js --force",
     "setup": "npm i && npm --prefix client i && npm --prefix server i"
   },
   "devDependencies": {
