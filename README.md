@@ -37,19 +37,27 @@ Client on http://localhost:5173, API on http://localhost:3000
 
 ## Auth
 
-> **The API is not protected.** There is no session handling, no auth
-> middleware, and no Passport wiring on the server yet -- every `/api` route
-> answers any caller. `curl localhost:3000/api/todos` returns data whether or
-> not you signed in. The login screen is a UI shell only; treat nothing behind
-> it as access-controlled until the server side lands.
+Sign-in is real: `POST /api/auth/login` runs the Passport local strategy
+against Postgres (bcrypt-compared), and the session rides in a cookie.
+`client/src/auth/AuthContext.jsx` is the only file that talks to the auth
+endpoints -- it calls `GET /api/auth/me` on load, `POST /api/auth/login`, and
+`POST /api/auth/logout`. Nothing else in the client reads auth state directly.
 
-On the client, `/` is the login page and `/app` sits behind `ProtectedRoute`.
-Sign-in is stubbed in `client/src/auth/AuthContext.jsx`: any non-empty username
-and password is accepted, and the "session" is a `sessionStorage` entry, so it
-survives a refresh but not closing the tab.
+The API and the app are same-origin -- Vite proxies `/api` to Express in dev,
+Express serves `client/dist` in prod -- so `fetch` sends the session cookie
+with no CORS or `credentials` setup.
 
-Wiring up Passport (local strategy + Postgres) means replacing the three
-`TODO(passport)` bodies in that file with calls to `GET /api/auth/me`,
-`POST /api/auth/login`, and `POST /api/auth/logout`, then adding the matching
-routes plus an authorization guard on the server. Nothing else in the client
-reads auth state directly, so no other component has to change.
+Credentials are **email + password**, not username: the local strategy is
+configured with `usernameField: 'email'` in `server/config/passport.js`.
+
+Accounts are provisioned directly in the `users` table -- insert a row with a
+bcrypt `passwordHash`. That's deliberate: buyers are staff, not self-service
+signups, so there is no registration route and none is planned.
+
+> **The API is not protected.** There is no auth middleware, so
+> `curl localhost:3000/api/todos` still answers any caller. `/app` is guarded
+> on the client only, which stops a browser but not a request.
+
+Sessions use the default `express-session` MemoryStore, so every server
+restart signs everyone out. `connect-pg-simple` over the existing Postgres
+connection is the fix.

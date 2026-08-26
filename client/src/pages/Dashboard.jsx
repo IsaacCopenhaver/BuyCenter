@@ -41,7 +41,7 @@ export default function Dashboard() {
       <header className="app-bar">
         <h1>Buy Center</h1>
         <div className="app-bar-user">
-          <span className="muted">{user.username}</span>
+          <span className="muted">{user.email}</span>
           <button type="button" onClick={signOut}>
             Sign out
           </button>
