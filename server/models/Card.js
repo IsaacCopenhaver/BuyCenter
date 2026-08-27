@@ -60,7 +60,7 @@ Card.init(
                 const hasGradingId = this.gradingId != null
                 
                 if (hasTcgProductId === hasGradingId) {
-                    throw new Error('A card cannot have only one of tcgProductId and gradingId set.')
+                    throw new Error('A card must have exactly one of tcgProductId or gradingId set.')
                 }
             },
         },
