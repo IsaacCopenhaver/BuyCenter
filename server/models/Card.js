@@ -54,7 +54,17 @@ Card.init(
         sequelize,
         modelName: 'Card',
         tableName: 'cards',
-    }
+        validate: {
+            rawSingleOrGraded() {
+                const hasTcgProductId = this.tcgProductId != null
+                const hasGradingId = this.gradingId != null
+                
+                if (hasTcgProductId === hasGradingId) {
+                    throw new Error('A card cannot have only one of tcgProductId and gradingId set.')
+                }
+            },
+        },
+    },
 )
 
 export default Card
