@@ -11,7 +11,7 @@ Card.init(
         },
 
         setId: {
-            type: DataTypes.STRING,
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
 
@@ -34,7 +34,7 @@ Card.init(
         },
 
         gradingId: {
-            type: DataTypes.STRING,
+            type: DataTypes.INTEGER,
             allowNull: true,
         },
 

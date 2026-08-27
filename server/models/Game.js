@@ -6,8 +6,8 @@ class Game extends Model {}
 Game.init(
     {
         id: {
-            type: DataTypes.STRING,
-            defaultValue: DataTypes.UUIDV4,
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
             primaryKey: true,
         },
 

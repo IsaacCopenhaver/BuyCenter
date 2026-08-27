@@ -6,13 +6,13 @@ class CardSet extends Model {}
 CardSet.init(
     {
         id: {
-            type: DataTypes.STRING,
-            defaultValue: DataTypes.UUIDV4,
+            type: DataTypes.INTEGER,
+            autoIncrement: true,
             primaryKey: true,
         },
 
         gameId: {
-            type: DataTypes.STRING,
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
 
