@@ -20,34 +20,12 @@ Card.init(
             allowNull: false,
         },
 
-        number: {
+        collectorNumber: {
             type: DataTypes.STRING,
         },
 
         rarity: {
             type: DataTypes.STRING,
-        },
-
-        tcgProductId: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
-
-        gradingId: {
-            type: DataTypes.INTEGER,
-            allowNull: true,
-        },
-
-        sellPrice: {
-            type: DataTypes.JSONB,
-        },
-
-        buyPrice: {
-            type: DataTypes.JSONB,
-        },
-
-        marketPrice: {
-            type: DataTypes.JSON,
         },
     },
     {
