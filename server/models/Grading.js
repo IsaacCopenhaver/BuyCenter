@@ -5,9 +5,8 @@ class Grading extends Model {}
 
 Grading.init(
     {
-        id: {
-            type: DataTypes.INTEGER,
-            autoIncrement: true,
+        certNumber: {
+            type: DataTypes.STRING,
             primaryKey: true,
         },
 
@@ -19,10 +18,6 @@ Grading.init(
         grade: {
             type: DataTypes.DECIMAL,
             allowNull: false,
-        },
-
-        certNumber: {
-            type: DataTypes.STRING,
         },
     },
     {
