@@ -9,6 +9,7 @@ import session from 'express-session'
 import passport from 'passport'
 import { initializePassport } from './config/passport.js'
 import sequelize from './db/database.js'
+import './models/index.js'
 
 await sequelize.authenticate()
 await sequelize.sync({ alter: true })
