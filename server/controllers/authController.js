@@ -14,6 +14,8 @@ export function login (req, res, next) {
       }
         return res.json({ 
             id: user.id, 
+            firstName: user.firstName,
+            lastName: user.lastName,
             email: user.email
         })
     })
@@ -29,6 +31,8 @@ export function me(req, res) {
 
     res.json({ 
         id: req.user.id, 
+        firstName: req.user.firstName,
+        lastName: req.user.lastName,
         email: req.user.email
     })
 }
