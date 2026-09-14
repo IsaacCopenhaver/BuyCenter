@@ -7,7 +7,7 @@ export default function Login() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -24,7 +24,7 @@ export default function Login() {
     setError('')
     setSubmitting(true)
     try {
-      await login({ username, password })
+      await login({ email, password })
       navigate(destination, { replace: true })
     } catch (err) {
       setError(err.message)
@@ -42,12 +42,13 @@ export default function Login() {
 
         <form className="stack" onSubmit={handleSubmit}>
           <label>
-            <span>Username</span>
+            <span>Email</span>
             <input
-              name="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
+              name="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               autoFocus
             />
           </label>
@@ -73,10 +74,6 @@ export default function Login() {
             {submitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-
-        <p className="muted hint">
-          Auth isn&apos;t wired up yet -- any username and password gets you in.
-        </p>
       </div>
     </main>
   )

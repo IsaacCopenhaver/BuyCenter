@@ -1,44 +1,82 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 
-// Everything the app knows about "who is signed in" comes from here, so
-// swapping the stub below for Passport is a one-file change. Components only
-// ever see { user, loading, login, logout }.
+// Everything the app knows about "who is signed in" comes from here. The
+// server owns the session -- a cookie issued by Passport -- so this file only
+// reflects it. Components only ever see { user, loading, login, logout }.
 const AuthContext = createContext(null)
 
-// Stand-in for the session cookie Passport will issue. Session storage (not
-// local) so closing the tab signs you out, which is closer to the real thing.
-const STORAGE_KEY = 'buycenter.user'
+// The API and the app are same-origin (Vite proxies /api to Express in dev,
+// Express serves the built client in prod), so fetch sends the session cookie
+// on its own and no CORS or credentials setup is needed.
+
+// Pulls the server's { error } message off a failed response so the login form
+// can show it. Falls back to something generic if the body isn't JSON.
+async function errorFrom(res, fallback) {
+  try {
+    const body = await res.json()
+    if (body?.error) return body.error
+  } catch {
+    // no JSON body -- use the fallback
+  }
+  return fallback
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
-  // Covers the "am I already signed in?" check on load. It's instant against
-  // storage, but becomes a real round-trip to GET /api/auth/me later -- the
-  // routes wait on it from day one so that swap doesn't cause a redirect flash.
+  // Covers the "am I already signed in?" check on load. The routes wait on it
+  // so a refresh on a protected page doesn't flash the login screen.
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // TODO(passport): fetch('/api/auth/me') -> setUser(res.ok ? await res.json() : null)
-    const stored = sessionStorage.getItem(STORAGE_KEY)
-    setUser(stored ? JSON.parse(stored) : null)
-    setLoading(false)
+    let cancelled = false
+
+    async function loadSession() {
+      try {
+        const res = await fetch('/api/auth/me')
+        // 401 is the normal "not signed in" answer, not a failure.
+        const signedIn = res.ok ? await res.json() : null
+        if (!cancelled) setUser(signedIn)
+      } catch {
+        // API unreachable -- treat as signed out rather than hanging on the
+        // loading state forever.
+        if (!cancelled) setUser(null)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadSession()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  async function login({ username, password }) {
-    // TODO(passport): POST /api/auth/login and let the local strategy check
-    // the credentials against Postgres. Throwing on a bad response keeps the
-    // shape the login form already handles.
-    if (!username.trim() || !password) throw new Error('Enter a username and password.')
+  async function login({ email, password }) {
+    // Cheap guard for a nicer message than the server's blanket 401.
+    if (!email.trim() || !password) throw new Error('Enter an email and password.')
 
-    const signedIn = { id: 'stub-user', username: username.trim() }
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(signedIn))
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      // The local strategy is configured with usernameField: 'email'.
+      body: JSON.stringify({ email: email.trim(), password }),
+    })
+
+    if (!res.ok) throw new Error(await errorFrom(res, 'Could not sign in.'))
+
+    const signedIn = await res.json()
     setUser(signedIn)
     return signedIn
   }
 
   async function logout() {
-    // TODO(passport): POST /api/auth/logout to destroy the server session.
-    sessionStorage.removeItem(STORAGE_KEY)
-    setUser(null)
+    // Destroys the server session. Clear locally either way -- if the request
+    // failed there's nothing useful the user can do with a stale user object.
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' })
+    } finally {
+      setUser(null)
+    }
   }
 
   return (
