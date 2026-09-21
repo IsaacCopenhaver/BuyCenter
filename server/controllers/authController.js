@@ -22,13 +22,8 @@ export function login (req, res, next) {
   })(req, res, next)
 }
 
+// Guarded by requireAuth in routes/auth.js, so req.user is always set here.
 export function me(req, res) {
-    if (!req.isAuthenticated()) {
-        return res.status(401).json({ 
-            error: 'Not authenticated' 
-        })
-    }
-
     res.json({ 
         id: req.user.id, 
         firstName: req.user.firstName,
