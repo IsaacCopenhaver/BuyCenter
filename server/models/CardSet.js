@@ -22,7 +22,7 @@ CardSet.init(
     },
     {
         sequelize,
-        modelName: 'Set',
+        modelName: 'CardSet',
         tableName: 'sets',
     }
 )
