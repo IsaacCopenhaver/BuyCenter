@@ -1,30 +1,31 @@
 import { Model, DataTypes } from 'sequelize'
 import sequelize from '../db/database.js'
 
-class CardSet extends Model {}
+class Cart extends Model {}
 
-CardSet.init(
+Cart.init(
     {
         id: {
             type: DataTypes.INTEGER,
+            autoIncrement: true,
             primaryKey: true,
         },
 
-        gameId: {
+        customerId: {
             type: DataTypes.INTEGER,
             allowNull: false,
         },
 
-        name: {
+        status: {
             type: DataTypes.STRING,
             allowNull: false,
         },
     },
     {
         sequelize,
-        modelName: 'CardSet',
-        tableName: 'sets',
-    }
+        modelName: 'Cart',
+        tableName: 'carts',    
+    },
 )
 
-export default CardSet
+export default Cart
