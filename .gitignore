@@ -3,3 +3,29 @@ dist/
 .env
 env
 *.log
+
+# Env variants (keep a committed .env.example as the template)
+.env.*
+!.env.example
+
+# Local REST Client request files -- these hold session cookies and test
+# credentials. Share a sanitized copy as *.example.http if needed.
+*.http
+!*.example.http
+
+# Keys and certificates
+*.pem
+*.key
+*.crt
+
+# Test output
+coverage/
+
+# Vite cache
+.vite/
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
