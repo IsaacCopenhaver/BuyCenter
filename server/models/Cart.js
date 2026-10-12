@@ -13,11 +13,12 @@ Cart.init(
 
         customerId: {
             type: DataTypes.INTEGER,
-            allowNull: false,
+            allowNull: true,
         },
 
         status: {
-            type: DataTypes.STRING,
+            type: DataTypes.ENUM('open', 'completed', 'abandoned'),
+            defaultValue: 'open',
             allowNull: false,
         },
     },

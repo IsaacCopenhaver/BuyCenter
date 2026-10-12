@@ -24,6 +24,10 @@ CartItem.init(
         quantity: {
             type: DataTypes.INTEGER,
             allowNull: false,
+            validate: {
+                min: 1,
+                isInt: true,
+            },
         },
 
         condition: {
