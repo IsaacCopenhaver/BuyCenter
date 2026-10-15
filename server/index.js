@@ -1,5 +1,4 @@
-import dotenv from 'dotenv'
-dotenv.config()
+import './db/env.js'
 
 import express from 'express'
 import path from 'node:path'
