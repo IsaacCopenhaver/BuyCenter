@@ -33,11 +33,6 @@ Card.init(
             allowNull: true,
         },
 
-        gradingId: {
-            type: DataTypes.STRING,
-            allowNull: true,
-        },
-
         sellPrice: {
             type: DataTypes.JSONB,
         },
@@ -46,24 +41,19 @@ Card.init(
             type: DataTypes.JSONB,
         },
 
+        buying: {
+            type: DataTypes.BOOLEAN,
+            allowNull: true,
+        },
+
         marketPrice: {
-            type: DataTypes.JSON,
+            type: DataTypes.JSONB,
         },
     },
     {
         sequelize,
         modelName: 'Card',
         tableName: 'cards',
-        validate: {
-            rawSingleOrGraded() {
-                const hasTcgProductId = this.tcgProductId != null
-                const hasGradingId = this.gradingId != null
-                
-                if (hasTcgProductId === hasGradingId) {
-                    throw new Error('A card must have exactly one of tcgProductId or gradingId set.')
-                }
-            },
-        },
     },
 )
 
