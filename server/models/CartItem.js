@@ -30,9 +30,24 @@ CartItem.init(
             },
         },
 
+        printing: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+
         condition: {
             type: DataTypes.STRING,
-            allowNull: false,
+            allowNull: true,
+        },
+
+        grade: {
+            type: DataTypes.STRING,
+            allowNull: true,
+        },
+
+        shopifyVariantId: {
+            type: DataTypes.STRING,
+            allowNull: true,
         },
 
         offerPrice: {
@@ -44,6 +59,16 @@ CartItem.init(
         sequelize,
         modelName: 'CartItem',
         tableName: 'cart_items',
+        validate: {
+            rawOrGraded() {
+                const isRaw = this.printing != null && this.condition != null && this.grade == null
+                const isGraded = this.grade != null && this.printing == null && this.condition == null
+
+                if (!isRaw && !isGraded) {
+                    throw new Error('A cart item needs printing + condition (raw) or grade only (graded).')
+                }
+            },
+        },
     },
 )
 
