@@ -1,3 +1,4 @@
+import { Op } from 'sequelize'
 import { Card } from '../models/index.js'
 
 export async function getCards(req, res) {
@@ -12,9 +13,26 @@ export async function getCards(req, res) {
             })
         }
 
+        const q = req.query.q
+
+        if (q !== undefined && typeof q !== 'string') {
+            return res.status(400).json({
+                error: 'q must be a string',
+            })
+        }
+
+        const search = q?.trim()
+
         const offset = (page - 1) * limit
 
         const { count, rows } = await Card.findAndCountAll({
+            where: search 
+                ? {
+                    name: {
+                        [Op.iLike]: `%${search}%`
+                    }
+                }
+                : {},
             limit,
             offset,
             order: [['shopifyProductId', 'ASC']]
