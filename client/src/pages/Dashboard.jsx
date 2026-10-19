@@ -1,77 +1,109 @@
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext.jsx'
+import AppBar from '../components/AppBar.jsx'
 import BuysByDayChart from '../components/BuysByDayChart.jsx'
 import CardsBoughtBoard from '../components/CardsBoughtBoard.jsx'
-
-// The session only carries what authController puts on it. Name if it's
-// there, email as the fallback so the header is never blank.
-function fullName(user) {
-  return [user.firstName, user.lastName].filter(Boolean).join(' ')
-}
+import { COMPLETED, IN_PROGRESS, cartCardCount, staffName, useData } from '../data/store.jsx'
 
 // A null count means "not loaded", not "zero" -- don't render it as 0.
 function count(n) {
   return n == null ? '—' : n
 }
 
+// Must match BuysByDayChart's own key format: the viewer's local calendar
+// date, not toISOString(), which would shift the day west of UTC.
+function dayKey(date) {
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${date.getFullYear()}-${month}-${day}`
+}
+
 export default function Dashboard() {
-  const { user, logout } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
+  const { carts, customers, staff } = useData()
 
-  // Hardcoded: there's no Buy or Customer model yet, so there is nothing to
-  // count. Swap this for a fetch of the summary once /api/buys exists.
-  const summary = { inProgress: null, completed: null, customers: null }
-
-  // Same story for the chart -- null is "not loaded", so it draws its empty
-  // state instead of a week of zeros. The shape the endpoint needs to return
-  // is { 'YYYY-MM-DD': count } in the viewer's local dates.
-  const completedByDay = null
-
-  // And for the leaderboard: [{ id, firstName, lastName, cards }], where
-  // `cards` sums individual cards across a user's buys, not buys themselves.
-  const cardsBought = null
-
-  const name = fullName(user)
-
-  async function signOut() {
-    await logout()
-    navigate('/', { replace: true })
+  const summary = {
+    inProgress: carts.filter((c) => c.status === IN_PROGRESS).length,
+    completed: carts.filter((c) => c.status === COMPLETED).length,
+    customers: customers.length,
   }
+
+  const completed = useMemo(
+    () => carts.filter((c) => c.status === COMPLETED && c.transaction),
+    [carts],
+  )
+
+  const completedByDay = useMemo(() => {
+    const counts = {}
+    for (const cart of completed) {
+      const key = dayKey(new Date(cart.transaction.completedAt))
+      counts[key] = (counts[key] ?? 0) + 1
+    }
+    return counts
+  }, [completed])
+
+  const cardsBought = useMemo(() => {
+    // Every assigned buyer is credited with the whole cart. Two people who
+    // worked one 40-card buy each get 40 -- the cart_buyers join records that
+    // they worked it, not what fraction each handled.
+    const totals = new Map()
+    for (const cart of completed) {
+      const cards = cartCardCount(cart)
+      for (const buyerId of cart.buyerIds) {
+        totals.set(buyerId, (totals.get(buyerId) ?? 0) + cards)
+      }
+    }
+
+    const people = [user, ...staff.filter((s) => s.id !== user.id)]
+    return [...totals].map(([id, cards]) => {
+      const person = people.find((p) => p.id === id)
+      return {
+        id,
+        firstName: person?.firstName,
+        lastName: person?.lastName,
+        email: person?.email ?? staffName(person),
+        cards,
+      }
+    })
+  }, [completed, staff, user])
 
   return (
     <main className="app">
-      <header className="app-bar">
-        <h1>Buy Center</h1>
-        <div className="app-bar-user">
-          <div className="app-bar-identity">
-            <strong>{name || user.email}</strong>
-            {name && <span className="muted">{user.email}</span>}
-          </div>
-          <button type="button" onClick={signOut}>
-            Sign out
-          </button>
-        </div>
-      </header>
+      <AppBar />
 
-      {/* These destinations have no routes yet, so a click currently lands
-          back here. They start working the moment the routes exist. */}
       <section className="tiles">
-        <button type="button" className="tile" onClick={() => navigate('/app/buys?status=in_progress')}>
+        <button
+          type="button"
+          className="tile"
+          onClick={() => navigate(`/app/carts?status=${IN_PROGRESS}`)}
+        >
           <span className="tile-figure">{count(summary.inProgress)}</span>
           <span className="tile-label">In-Progress Buys</span>
         </button>
 
-        <button type="button" className="tile" onClick={() => navigate('/app/buys?status=completed')}>
+        <button
+          type="button"
+          className="tile"
+          onClick={() => navigate(`/app/carts?status=${COMPLETED}`)}
+        >
           <span className="tile-figure">{count(summary.completed)}</span>
           <span className="tile-label">Completed Buys</span>
         </button>
 
-        <button type="button" className="tile" onClick={() => navigate('/app/customers')}>
+        {/* No customers page yet, so this lands on the cart list rather than
+            on the catch-all redirect back to login. */}
+        <button type="button" className="tile" onClick={() => navigate('/app/carts')}>
           <span className="tile-figure">{count(summary.customers)}</span>
           <span className="tile-label">Customers</span>
         </button>
 
-        <button type="button" className="tile tile-start" onClick={() => navigate('/app/buys/new')}>
+        <button
+          type="button"
+          className="tile tile-start"
+          onClick={() => navigate('/app/carts/new')}
+        >
           <span className="tile-figure" aria-hidden="true">
             +
           </span>
@@ -81,17 +113,17 @@ export default function Dashboard() {
 
       <BuysByDayChart
         counts={completedByDay}
-        onSelectDay={(day) => navigate(`/app/buys?status=completed&day=${day}`)}
+        onSelectDay={(day) => navigate(`/app/carts?status=${COMPLETED}&day=${day}`)}
       />
 
       <CardsBoughtBoard
         entries={cardsBought}
         highlightId={user.id}
-        onSelectBuyer={(id) => navigate(`/app/buys?buyer=${id}`)}
+        onSelectBuyer={(id) => navigate(`/app/carts?buyer=${id}`)}
       />
 
       <p className="hint muted">
-        Counts, the chart, and the leaderboard are placeholders until the buy API is in place.
+        Counts, the chart, and the leaderboard read the dummy cart store — not the server.
       </p>
     </main>
   )
