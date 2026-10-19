@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import authRouter from './auth.js'
 import { requireAuth } from '../middleware/requireAuth.js'
+import cardsRouter from './cards.js'
 
 // Every API endpoint hangs off this router.
 const router = Router()
@@ -14,5 +15,8 @@ router.use('/auth', authRouter)
 // line. It's guarded by default; a new router only reaches an anonymous
 // caller if someone deliberately moves it above the guard.
 router.use(requireAuth)
+
+// Protected card routes
+router.use('/cards', cardsRouter)
 
 export default router
