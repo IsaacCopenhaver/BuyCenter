@@ -2,7 +2,6 @@ import User from './User.js'
 import Game from './Game.js'
 import CardSet from './CardSet.js'
 import Card from './Card.js'
-import Grading from './Grading.js'
 import Cart from './Cart.js'
 import Customer from './Customer.js'
 import CartItem from './CartItem.js'
@@ -15,10 +14,6 @@ CardSet.belongsTo(Game, { foreignKey: 'gameId' })
 // One set has many cards
 CardSet.hasMany(Card, { foreignKey: 'setId' })
 Card.belongsTo(CardSet, { foreignKey: 'setId' })
-
-// One grading connects to exactly one card
-Grading.hasOne(Card, { foreignKey: 'gradingId' })
-Card.belongsTo(Grading, { foreignKey: 'gradingId' })
 
 // One customer can have many carts
 Customer.hasMany(Cart, { foreignKey: 'customerId' })
@@ -61,4 +56,4 @@ BuyTransaction.belongsTo(User, {
     as: 'completedBy',
 })
 
-export { User, Game, CardSet, Card, Grading, Cart, Customer, CartItem, BuyTransaction }
+export { User, Game, CardSet, Card, Cart, Customer, CartItem, BuyTransaction }

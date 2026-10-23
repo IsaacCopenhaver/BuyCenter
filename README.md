@@ -59,8 +59,8 @@ exists, so the whole app is one Node process on one port.
 
 One Postgres database, reached through a single Sequelize instance in
 `server/db/database.js`. Models live in `server/models/`; `models/index.js`
-declares the associations (a game has many sets, a set has many cards, a card
-has one grading).
+declares the associations (a game has many sets, a set has many cards, a cart
+has many cart items).
 
 **The connection requires SSL** (`dialectOptions.ssl`), which suits a hosted
 Postgres like DigitalOcean Managed Databases but will fail against a stock
