@@ -11,7 +11,9 @@
     "db:sync:alter": "node server/db/sync.js --alter",
     "db:sync:force": "node server/db/sync.js --force",
     "setup": "npm i && npm --prefix client i && npm --prefix server i",
-    "db:users": "node server/db/showUsers.js"
+    "db:users": "node server/db/showUsers.js",
+    "test": "npm --prefix client run test",
+    "test:watch": "npm --prefix client run test:watch"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

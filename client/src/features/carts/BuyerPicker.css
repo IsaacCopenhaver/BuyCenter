@@ -1,0 +1,28 @@
+.check-list {
+  display: flex;
+  gap: var(--space-2) var(--space-4);
+  flex-wrap: wrap;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  cursor: pointer;
+}
+
+.check input {
+  width: auto;
+  padding: 0;
+  cursor: pointer;
+}
+
+.check.is-locked {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.check.is-locked input {
+  cursor: default;
+}

@@ -1,0 +1,92 @@
+/* --- card search --- */
+
+.search-controls {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.search-field {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+}
+
+.search-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: var(--space-3);
+}
+
+.search-filters label {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+}
+
+.search-count {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-md);
+}
+
+.results {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.result {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-2) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.result:hover {
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.result-main {
+  display: grid;
+  gap: var(--space-1);
+  /* Takes the slack so prices and the add button stay right-aligned. */
+  flex: 1 1 14rem;
+  min-width: 0;
+}
+
+.result-name {
+  font-size: var(--text-base);
+}
+
+.result-meta {
+  font-size: var(--text-sm);
+}
+
+.result-prices {
+  display: grid;
+  gap: var(--space-1);
+  text-align: right;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.result-buy {
+  font-size: var(--text-base);
+}
+
+.result-add {
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--text-md);
+}
+
+/* Long result lists: the browser skips layout and paint for rows scrolled out
+   of view, with contain-intrinsic-size standing in for their height so the
+   scrollbar stays honest. CSS doing what list virtualization would otherwise
+   need JS for. Chrome/Edge 85+, Safari 18+. */
+.results > li {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 3.5rem;
+}

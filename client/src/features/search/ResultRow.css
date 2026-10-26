@@ -1,0 +1,78 @@
+/*
+ * One search result: thumbnail, identity, stock, price, add controls.
+ *
+ * The row reflows against its panel rather than the viewport, so the same
+ * component behaves correctly on the full-width search page and inside the
+ * narrower add-a-card panel on a cart.
+ */
+
+.stock {
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-muted);
+}
+
+/* Out of stock is information, not an error -- it reads in the same ink as
+   the rest of the row and only loses the muting. */
+.stock.is-out {
+  color: var(--text);
+}
+
+.result-grid-toggle {
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.result-grid-toggle:hover:not(:disabled) {
+  color: var(--text);
+}
+
+/* A row that was just added holds a wash for a couple of seconds, so a buyer
+   working quickly can see the click landed without looking at the cart. */
+.result.is-added,
+.line.is-flash {
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.search-added strong {
+  font-weight: var(--weight-bold);
+}
+
+.result-control {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+}
+
+.result-control select,
+.result-control input {
+  padding-block: var(--space-1);
+  padding-inline: var(--space-2);
+  font-size: var(--text-md);
+}
+
+.result-control input[type='number'] {
+  inline-size: 4rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Printing names run long ("1st Edition Holofoil"), so that picker needs more
+   room than the condition one beside it. */
+.result-printing select {
+  max-inline-size: 10.5rem;
+}
+
+/* Narrow panel: the identity block takes a row of its own and the controls
+   line up beneath it, rather than every item fighting for the same line. */
+@container panel (width < 46rem) {
+  .result-main {
+    flex-basis: 100%;
+  }
+
+  .result-prices {
+    margin-inline-start: auto;
+  }
+}

@@ -1,4 +1,5 @@
 import { useId, useMemo } from 'react'
+import './CardsBoughtBoard.css'
 
 const TOP = 5
 
@@ -37,7 +38,12 @@ function plural(n) {
  * `cards` is a count of individual cards, not of buys: a single buy of a
  * 300-card collection outranks thirty ten-card buys.
  */
-export default function CardsBoughtBoard({ entries = null, limit = TOP, highlightId, onSelectBuyer }) {
+export default function CardsBoughtBoard({
+  entries = null,
+  limit = TOP,
+  highlightId,
+  onSelectBuyer,
+}) {
   const headingId = useId()
 
   const rows = useMemo(() => {

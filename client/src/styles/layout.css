@@ -1,0 +1,32 @@
+/*
+ * Page shells. `main` is the column every page sits in; the modifiers widen
+ * it for the pages that carry wider rows.
+ */
+
+main {
+  inline-size: 100%;
+  max-inline-size: 32rem;
+  padding-block: var(--space-8);
+  padding-inline: var(--space-5);
+  /* Takes the height left over under the bar, so a page that centres its
+     own content -- the login card -- has a full-height box to centre in. */
+  flex: 1 0 auto;
+}
+
+.app {
+  max-inline-size: 48rem;
+}
+
+/* Search and cart pages carry wider rows than the dashboard does. */
+.app-wide {
+  max-inline-size: 72rem;
+}
+
+/* Tablet is the narrow end of what this is designed for, so the gutters
+   tighten rather than the content being allowed to touch the edges. */
+@media (width <= 48rem) {
+  main {
+    padding-block: var(--space-5);
+    padding-inline: var(--space-4);
+  }
+}

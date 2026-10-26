@@ -1,0 +1,77 @@
+/* --- leaderboard --- */
+
+.board {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.board-hit {
+  width: 100%;
+  display: grid;
+  /* rank | name | bar | count -- only the bar flexes, so the counts stay in a
+     straight column the eye can compare down. */
+  grid-template-columns: 1.25rem minmax(4.5rem, 9rem) 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: none;
+  text-align: left;
+}
+
+.board-hit:hover,
+.board-hit:focus-visible {
+  background: color-mix(in srgb, currentColor 7%, transparent);
+}
+
+/* The signed-in user's own row, marked by identity rather than by rank -- the
+   bar keeps the one series color so the highlight never reads as a value. */
+.board-hit.is-you {
+  background: color-mix(in srgb, currentColor 5%, transparent);
+}
+
+.board-hit.is-you .board-name,
+.board-hit.is-you .board-value {
+  font-weight: 600;
+}
+
+.board-rank {
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text-muted);
+}
+
+.board-name {
+  font-size: var(--text-base);
+  /* Long names shorten rather than wrapping the row to two lines. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-track {
+  height: 8px;
+  border-radius: var(--radius-xs);
+  /* A lighter wash of the bar's own hue, so the unfilled remainder reads as
+     part of the same scale instead of as separate chrome. */
+  background: color-mix(in srgb, var(--series) 16%, transparent);
+}
+
+.board-fill {
+  display: block;
+  width: var(--w);
+  height: 100%;
+  /* Rounded at the data end, square where it meets the baseline. */
+  border-radius: 0 4px 4px 0;
+  background: var(--series);
+}
+
+.board-value {
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+}

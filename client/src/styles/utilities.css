@@ -1,0 +1,162 @@
+/*
+ * Small classes shared across features.
+ */
+
+.muted {
+  color: var(--text-muted);
+}
+
+.stack {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.stack label {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+}
+
+.error {
+  margin: 0;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+  color: var(--danger);
+  font-size: var(--text-md);
+}
+
+/* The closing note under a page. Separated by a rule rather than just space,
+   so it reads as a footnote and not as orphaned content. */
+.hint {
+  margin-block: var(--space-8) 0;
+  padding-block-start: var(--space-4);
+  border-block-start: 1px solid var(--border);
+  font-size: var(--text-sm);
+  color: var(--text-faint);
+}
+
+.subhead {
+  margin-block: 0 var(--space-1);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+/* --- buttons ---------------------------------------------------------- */
+
+/* A link that has to read as a button. Matches the <button> rule in base so
+   the two sit on the same baseline next to each other. */
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-1);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    border-color var(--duration-fast) var(--ease),
+    box-shadow var(--duration-fast) var(--ease),
+    translate var(--duration-fast) var(--ease);
+}
+
+.button:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
+}
+
+.button:active {
+  translate: 0 1px;
+  box-shadow: none;
+}
+
+/* The one loud action on a screen. A gradient rather than a flat fill, so it
+   has the same lit-from-above logic as every other raised surface here. */
+.button-primary,
+button.button-primary {
+  border-color: transparent;
+  background: linear-gradient(180deg, var(--accent), var(--accent-hover));
+  color: var(--accent-contrast);
+  font-weight: var(--weight-bold);
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.18),
+    var(--shadow-2);
+}
+
+.button-primary:hover:not(:disabled),
+button.button-primary:hover:not(:disabled) {
+  border-color: transparent;
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 1px 0 hsl(0 0% 100% / 0.18),
+    var(--shadow-3);
+}
+
+/* --- fieldsets --- */
+
+.fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fieldset legend {
+  padding: 0;
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+}
+
+.fieldset-hint {
+  margin-block: var(--space-1) var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* --- empty states --- */
+
+.board-empty {
+  margin: 0;
+  padding-block: var(--space-8);
+  text-align: center;
+  font-size: var(--text-md);
+  color: var(--text-muted);
+}
+
+/* A panel with nothing in it: message and its way out, stacked and centred
+   together rather than a centred line of text with a stray left-aligned
+   button under it. */
+.empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-10);
+  text-align: center;
+}
+
+.empty-title {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.empty p {
+  margin: 0;
+  max-inline-size: 36ch;
+  color: var(--text-muted);
+}
+
+.empty .button {
+  margin-block-start: var(--space-4);
+}

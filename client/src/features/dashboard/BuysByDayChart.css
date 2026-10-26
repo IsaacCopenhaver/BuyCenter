@@ -1,0 +1,184 @@
+/* Two columns (tick labels, plot) and two rows -- the weekday strip gets a row
+   of its own so the plot never has to give up height to it and the labels
+   can't end up clipped. */
+.chart {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: 9rem auto;
+  column-gap: var(--space-2);
+}
+
+.chart-axis {
+  position: relative;
+  text-align: right;
+  font-size: var(--text-xs);
+  /* Equal-width digits so the tick column stays aligned down the axis. */
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+/* Ticks and gridlines share the same --at fraction, so they stay locked
+   together whatever scale the data works out to. */
+.chart-tick {
+  position: absolute;
+  right: 0;
+  bottom: calc(var(--at) * 100%);
+  transform: translateY(50%);
+  line-height: 1;
+}
+
+.chart-plot {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  align-items: end;
+  border-bottom: 1px solid var(--border);
+}
+
+.chart-grid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--at) * 100%);
+  /* Recessive hairline, solid -- dashes would read as a threshold. */
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+}
+
+/* The whole band is the hit target, not just the painted bar: a one-buy bar is
+   only a few pixels tall and nobody can reliably point at it. */
+.chart-band {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+}
+
+.chart-col {
+  width: min(24px, 55%);
+  height: var(--h);
+  /* A real value never vanishes: one buy against a tall scale still draws. */
+  min-height: 3px;
+  /* Rounded at the data end, square where it meets the baseline. */
+  border-radius: 4px 4px 0 0;
+  background: var(--series);
+}
+
+.chart-band:hover .chart-col,
+.chart-band:focus-visible .chart-col {
+  filter: brightness(1.15);
+}
+
+/* The peak is the only directly labelled value -- the axis, the hover readout,
+   and the table view carry the rest. Text wears ink, never the series color. */
+.chart-peak {
+  position: absolute;
+  bottom: var(--h);
+  margin-bottom: var(--space-1);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.chart-tip {
+  position: absolute;
+  /* Rides the bar cap, but stops climbing once the readout would clear the top
+     of the plot -- past that it collides with the panel heading. */
+  bottom: min(var(--h), 45%);
+  left: 50%;
+  transform: translateX(-50%);
+  display: none;
+  margin-bottom: var(--space-6);
+  padding: var(--space-2) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  /* Opaque against whatever is behind it, in either theme
+     without this file having to hardcode a surface color. */
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  white-space: nowrap;
+  text-align: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Keyboard focus gets exactly what hover gets. */
+.chart-band:hover .chart-tip,
+.chart-band:focus-visible .chart-tip {
+  display: grid;
+}
+
+.chart-tip strong {
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The end bands would push their readout past the panel edge, so those two
+   anchor to a side instead of centering. */
+.chart-band:first-of-type .chart-tip {
+  left: 0;
+  transform: none;
+  text-align: left;
+}
+
+.chart-band:last-of-type .chart-tip {
+  left: auto;
+  right: 0;
+  transform: none;
+  text-align: right;
+}
+
+.chart-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  margin: 0;
+  font-size: var(--text-md);
+  pointer-events: none;
+}
+
+.chart-days {
+  grid-column: 2;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* --- table view (the chart's WCAG-clean twin) --- */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-base);
+}
+
+.data-table th,
+.data-table td {
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--border);
+  font-weight: normal;
+  text-align: left;
+}
+
+.data-table thead th {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.data-table thead th:last-child,
+.data-table td {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
