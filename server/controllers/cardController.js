@@ -4,10 +4,10 @@ import { Card, CardSet } from '../models/index.js'
 const MAX_Q_LENGTH = 100
 const MAX_INTEGER = 2147483647  // Max value for a signed 32-bit integer
 
-// Optional positive-integer query param: undefined when absent, null when
-// present but invalid (so the caller can answer 400).
+// Optional positive-integer query param: undefined when absent or empty, null
+// when present but invalid (so the caller can answer 400).
 function parseId(value) {
-    if (value === undefined) { return undefined }
+    if (value === undefined || value === '') { return undefined }
     const id = Number(value)
     return Number.isInteger(id) && id > 0 && id <= MAX_INTEGER ? id : null
 }
