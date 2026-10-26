@@ -1,0 +1,126 @@
+/* --- cart lines --- */
+
+.line-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* A row, not a strip with a rule under it. Each line is a card the buyer is
+   negotiating, so it gets its own surface and reacts to being pointed at. */
+.line {
+  display: flex;
+  align-items: end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-sunken);
+  transition:
+    border-color var(--duration-fast) var(--ease),
+    background var(--duration-fast) var(--ease);
+}
+
+.line:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-raised);
+}
+
+/* The line being edited right now lifts out of the list. :has() reads the
+   focus from the controls inside it, so nothing has to track it in state. */
+.line:has(:focus-visible) {
+  border-color: var(--accent);
+  background: var(--surface-raised);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.line-main {
+  display: grid;
+  gap: var(--space-1);
+  /* Wide basis so the name block takes a whole row of its own before the
+     controls start wrapping one at a time on a phone. */
+  flex: 1 1 13rem;
+  min-inline-size: 0;
+  padding-block-end: var(--space-1);
+}
+
+.line-name {
+  font-size: var(--text-base);
+}
+
+.line-meta {
+  font-size: var(--text-sm);
+}
+
+.line-control {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+
+.line-control input,
+.line-control select {
+  padding: var(--space-2) var(--space-2);
+  font-size: var(--text-base);
+}
+
+/* Quantity and offer are short numbers; a full-width field would make the row
+   wrap for no reason. */
+.line-control input[type='number'] {
+  width: 5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.line-condition input,
+.line-condition select {
+  width: 10rem;
+}
+
+.line-figures {
+  display: grid;
+  gap: var(--space-1);
+  text-align: right;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  padding-block-end: var(--space-1);
+  min-width: 5rem;
+}
+
+.line-total {
+  font-size: var(--text-base);
+}
+
+.line-remove {
+  padding: var(--space-1) var(--space-2);
+  border: 0;
+  font-size: var(--text-xl);
+  line-height: 1;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.line-remove:hover {
+  color: var(--danger);
+}
+
+/* Same treatment as the search results: a big cart stays responsive because
+   off-screen lines are not laid out until they scroll in. */
+.line-list > li {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 4rem;
+}
+
+/* Narrow panel: the card identity takes its own row and the controls wrap
+   beneath it, instead of the name being squeezed to nothing. */
+@container panel (width < 44rem) {
+  .line-main {
+    flex-basis: 100%;
+  }
+
+  .line-figures {
+    margin-inline-start: auto;
+  }
+}

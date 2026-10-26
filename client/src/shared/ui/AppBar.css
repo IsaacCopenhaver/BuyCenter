@@ -1,0 +1,179 @@
+/*
+ * The branded header. Full-bleed brand colour in both themes, with the page
+ * column reconstructed inside it so the content still lines up with the page
+ * below.
+ */
+
+/* A sibling of <main>, not a child, so it spans the full width by simply
+   being a stretched flex item -- no negative-margin break-out, and so no
+   dependence on vw, which counts the scrollbar and used to push every page
+   sideways. */
+.app-bar {
+  align-self: stretch;
+  background: var(--bar);
+  color: var(--bar-text);
+  box-shadow: var(--shadow-2);
+  /* A brighter hairline along the bottom edge, so the bar ends on a
+     deliberate line rather than just stopping. */
+  border-block-end: 1px solid var(--bar-edge);
+}
+
+/* Three parts: brand, nav, user. The nav takes the slack so the user block
+   stays hard right. The inner column is capped at the widest page width, so
+   the header holds still while content columns vary by page. */
+.app-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  inline-size: 100%;
+  max-inline-size: 72rem;
+  margin-inline: auto;
+  padding-block: var(--space-3);
+  padding-inline: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.app-bar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* The logo is blue line-art on a pale field. On the blue bar its frame would
+   disappear, so it keeps a light chip of its own -- the artwork is used as
+   drawn rather than recoloured. */
+.app-bar-logo {
+  display: grid;
+  box-shadow:
+    0 1px 2px hsl(224 60% 10% / 0.35),
+    inset 0 0 0 1px hsl(224 30% 70% / 0.4);
+  place-items: center;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  line-height: 0;
+}
+
+.app-bar-logo img {
+  display: block;
+  block-size: 1.5rem;
+  inline-size: auto;
+}
+
+.app-bar-product {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  white-space: nowrap;
+}
+
+.app-nav {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  /* Takes the slack, pushing the user block to the far edge. */
+  margin-inline-end: auto;
+}
+
+.app-nav a {
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-base);
+  color: var(--bar-text-muted);
+  text-decoration: none;
+  transition:
+    background var(--duration-fast) var(--ease),
+    color var(--duration-fast) var(--ease);
+}
+
+.app-nav a:hover {
+  color: var(--bar-text);
+  background: hsl(0 0% 100% / 0.1);
+}
+
+/* The active tab is marked by weight and a solid chip rather than by colour
+   alone, so it survives being read without colour. */
+.app-nav a.active {
+  color: var(--bar-text);
+  font-weight: var(--weight-bold);
+  background: hsl(0 0% 100% / 0.18);
+}
+
+.app-bar-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--text-md);
+}
+
+.app-bar-avatar {
+  display: grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  border-radius: var(--radius-full);
+  background: hsl(0 0% 100% / 0.18);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.02em;
+}
+
+.app-bar-identity {
+  display: grid;
+  gap: var(--space-1);
+  line-height: 1.25;
+}
+
+.app-bar-identity span {
+  color: var(--bar-text-muted);
+  font-size: var(--text-sm);
+}
+
+/* Reversed out of the bar rather than inheriting the default button, which
+   would put a light surface on a dark bar. */
+.app-bar-signout {
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+  border-color: hsl(0 0% 100% / 0.35);
+  background: none;
+  color: var(--bar-text);
+  font-size: var(--text-md);
+}
+
+.app-bar-signout:hover:not(:disabled) {
+  border-color: hsl(0 0% 100% / 0.7);
+  background: hsl(0 0% 100% / 0.1);
+}
+
+/* Focus rings inside the bar need to be visible against brand blue, not the
+   page accent, which is nearly the same colour. */
+.app-bar :focus-visible {
+  outline-color: #fff;
+}
+
+/* Tablet: the identity text goes, leaving the avatar. The name is not worth
+   a second row when the nav needs the width. */
+@media (width <= 60rem) {
+  .app-bar-identity {
+    display: none;
+  }
+}
+
+@media (width <= 40rem) {
+  .app-bar-inner {
+    gap: var(--space-3);
+  }
+
+  .app-nav {
+    order: 3;
+    inline-size: 100%;
+    margin-inline-end: 0;
+  }
+
+  .app-bar-user {
+    margin-inline-start: auto;
+  }
+}

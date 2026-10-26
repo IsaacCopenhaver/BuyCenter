@@ -8,21 +8,24 @@ BuyCenter/
 ├── package.json      # scripts that run both sides
 ├── .env              # DATABASE_URL + SESSION_SECRET -- not committed
 ├── client/
-│   ├── vite.config.js   # proxies /api -> localhost:3000 in dev
+│   ├── vite.config.js      # /api proxy, '@' alias, vitest config
 │   ├── index.html
+│   ├── assets/source/      # the original logo + icon art (NOT served)
+│   ├── public/brand/       # generated, committed -- see "Branding"
+│   ├── scripts/
+│   │   └── generate-assets.mjs
 │   └── src/
-│       ├── App.jsx          # every route lives here
-│       ├── auth/AuthContext.jsx   # the only file that talks to /api/auth
-│       ├── routes/ProtectedRoute.jsx
-│       ├── data/            # dummy carts and catalog -- see "Dummy data"
-│       │   ├── catalog.js   # stand-in for the card catalog + search
-│       │   └── store.jsx    # stand-in for the carts API
-│       ├── components/
-│       │   ├── AppBar.jsx           # header + nav, on every signed-in page
-│       │   ├── CardSearch.jsx       # search box, used standalone and in a cart
-│       │   ├── BuysByDayChart.jsx
-│       │   └── CardsBoughtBoard.jsx
-│       └── pages/{Login,Dashboard,Search,Carts,NewCart,Cart}.jsx
+│       ├── app/App.jsx     # every route lives here
+│       ├── features/       # grouped by domain, styles co-located
+│       │   ├── auth/       AuthContext, ProtectedRoute, Login
+│       │   ├── dashboard/  Dashboard, BuysByDayChart, CardsBoughtBoard
+│       │   ├── search/     SearchPage, CardSearch, ResultRow, PriceGrid
+│       │   └── carts/      CartsPage, NewCartPage, CartPage, CartLine
+│       ├── shared/
+│       │   ├── ui/         AppBar, CardImage, NumberField, Panel, Badge
+│       │   └── data/       catalog.js, store.jsx  -- see "Dummy data"
+│       ├── styles/         tokens, base, layout, utilities
+│       └── test/           vitest suites + render helpers
 └── server/
     ├── index.js              # app setup, mounts /api, serves client/dist in prod
     ├── routes/
@@ -49,6 +52,14 @@ npm run dev
 ```
 
 Client on http://localhost:5173, API on http://localhost:3000.
+
+Tests and formatting:
+
+```bash
+npm test                        # vitest, once
+npm run test:watch
+npm --prefix client run format   # prettier
+```
 
 For a production-shaped run, `npm run build` then `npm start`: the build writes
 `client/dist`, and `server/index.js` serves it automatically if that folder
@@ -139,6 +150,85 @@ client side of those is still running on dummy data.
 
 ## Client
 
+### How the front end is organised
+
+Grouped by feature, not by file type. Everything one part of the app needs
+sits together — the page, the components it renders, and their stylesheets:
+
+```
+features/carts/
+  CartPage.jsx      CartPage orchestrates
+  CartLine.jsx      one line renders itself
+  CartLine.css      its styles, next to it
+  PaymentSplit.css
+```
+
+Imports follow one rule: **relative means "my own feature", `@/` means
+"somewhere else"**. `@` is aliased to `src/` in `vite.config.js`, so moving a
+file does not mean recounting `../../..` chains, and a relative import is a
+visible signal that you have not crossed a boundary.
+
+Styling is plain CSS co-located with each component. The global layer is four
+files, imported in cascade order by `styles/index.css`:
+
+| File | Holds |
+| --- | --- |
+| `tokens.css` | every colour, space, radius, type size and duration |
+| `base.css` | unclassed elements, form controls, focus, reduced-motion |
+| `layout.css` | the page column and its width modifiers |
+| `utilities.css` | small classes several features share |
+
+**No component stylesheet hard-codes a value** — they resolve to tokens. That
+is `SKILL.md`'s css-first rule ("design tokens only, no arbitrary values")
+applied through custom properties, since there is no Tailwind here.
+
+### Branding
+
+Layton Gaming. The brand colour is **`#204199`**, measured from the source
+art, where it is 99.8% of all chromatic pixels.
+
+The app bar is that colour in both themes, with the logo on a light chip. The
+chip is deliberate: the artwork is blue line-art on a pale field, so placed
+directly on the bar its frame and outlines would vanish into the background
+and leave the letterforms floating.
+
+`#204199` clears 9.2:1 against white but only 2.1:1 against the dark surface,
+so the **interactive accent** moves up the ramp to `--brand-400` in dark mode
+while the bar keeps the true brand colour. Charts keep a separate teal series
+colour — if the chrome and the data share a hue, bars read as decoration
+rather than as values.
+
+Brand assets are generated, never hand-cut:
+
+```bash
+npm run assets   # from client/
+```
+
+The originals are 20834x20834 (434 megapixels, ~3MB each) and live in
+`client/assets/source/`, deliberately **outside** `public/` — anything in
+there is copied verbatim into the build, and a browser needs roughly 1.6GB of
+memory to decode one. The script derives `logo-32/64/128` and
+`icon-32/180/512` into `public/brand/`, all between 1.7 and 18 kB.
+
+### Responsive
+
+Designed for **desktop and tablet** (roughly 768px up). Phone is not a target;
+it degrades sanely but is not designed for.
+
+Layout is driven by **container queries, not viewport breakpoints**. Each
+`.panel` declares itself a query container, so a row reflows against the width
+it was actually given. That matters because the same `CardSearch` renders both
+full-width on the search page and inside a narrower panel on a cart — a
+viewport query would get the second case wrong.
+
+Also per css-first: `:has()` instead of state the component would have to
+calculate and pass down, logical properties throughout (`margin-inline`,
+`inset-inline-start`), and `content-visibility: auto` on the result and cart
+lists so off-screen rows are not laid out — list virtualization without the
+JavaScript.
+
+### Pages
+
 | Path | Page | What it does |
 | --- | --- | --- |
 | `/` | Login | the index is the sign-in form |
@@ -151,6 +241,71 @@ client side of those is still running on dummy data.
 Everything under `/app` is nested inside `ProtectedRoute`, so it requires a
 signed-in user. `AppBar` carries the navigation and appears on every signed-in
 page.
+
+### Working a buy
+
+The counter workflow the cart page is built around, in the order it happens:
+
+1. **Open a cart** against a customer. A walk-in with no record can be created
+   inline on that form -- leaving the page would lose the half-started cart.
+   A new customer needs a first and last name, plus a phone number or an
+   email (either alone is fine) -- enforced in the form only; the Customer
+   model does not check it yet.
+   Assign the staff working it; the person starting it is pre-assigned.
+2. **Find each card.** Search matches name, collector number, set, printing,
+   rarity, and cert number. Rows carry a thumbnail (hover or focus it for a
+   readable scan), the on-hand count, and the suggested buy price.
+3. **Add it.** One search result per card, with **printing** and
+   **condition** pickers plus a quantity, so a playset goes in as one
+   action. The catalog stores each printing as its own row, but a search for
+   "charizard" returning three near-identical lines reads badly -- so
+   `searchResults()` groups them into one result and the picker chooses
+   between them. Searching a printing by name ("shadowless") opens the row on
+   that printing. Add with the button or a double-click anywhere on the row.
+
+   The **All prices** grid is printings down and conditions across, and every
+   cell shows the buy price over the on-hand count for that exact
+   combination. Clicking a cell adds the row quantity at that printing and
+   condition -- including a printing other than the one the row is for --
+   rather than making you add the default and correct it twice. Every add names what went in,
+   flashes the row and the new cart line, then returns focus to the search box
+   with the query selected, so the next card is one keystroke away.
+4. **Adjust the line** -- printing, condition, quantity, offer. Changing the
+   printing or condition re-prices the line, but only if the offer was still
+   sitting at the suggested price; a hand-typed number is treated as
+   negotiated and survives. **Undo price change** steps back through price
+   edits, and leaves quantities alone.
+5. **Negotiate on the pile** with **Set cart total**. See below.
+6. **Pay out.** Split the cart's cash value across cash, check, and store
+   credit in any combination. Checkout is blocked until the allocation adds up
+   to the cart total.
+
+#### Re-pricing a whole cart
+
+`Set cart total` scales every offer by the same factor, so the change lands
+**weighted by what each line is already worth**: a $5 card, a $10 card and a
+$5 card retotalled to $25 take 25% / 50% / 25% of it, landing at $6.25 /
+$12.50 / $6.25. An even split would pay $6.67 for the $5 common and $11.67 for
+the card worth twice as much.
+
+`distributeTotal()` in `store.jsx` does this in integer cents, so the lines
+always add back up to the number that was typed. Two cases it has to handle:
+a cart already at $0 has no weights to scale and falls back to an even split,
+and some totals are simply unreachable -- a single line of 3 cards can only
+make multiples of 3 cents -- in which case the UI names the closest total it
+could reach instead of silently rounding.
+
+#### Store credit and split payments
+
+Store credit is worth **15%** more than cash (`STORE_CREDIT_BONUS`). The cart
+total is the *cash value*, and the bonus applies **to the credit portion
+only**. So a $100 buy split $40 check / $60 credit hands over $40 plus $69 of
+credit -- $109 of value.
+
+`payoutFor()` is the single place that arithmetic lives, and transactions
+store only the allocation, never the computed payout. A change to the bonus
+rate therefore cannot leave an old transaction showing arithmetic that no
+longer adds up.
 
 ### Dummy data
 
@@ -167,10 +322,51 @@ holds both stand-ins:
 It lives for the life of the tab: a refresh resets it. That is deliberate --
 dummy state that survived a reload would look like it had saved something.
 
-One shape the models do not pin down: `sellPrice`, `buyPrice`, and
-`marketPrice` are bare JSONB columns. The dummy data assumes a map keyed by
-condition code, with graded cards storing their single price under `GRADED`.
-`priceFor()` in `catalog.js` is the only place that assumption lives.
+Shapes the models do not pin down, all assumed by the dummy data:
+
+- **Prices.** `sellPrice`, `buyPrice`, and `marketPrice` are bare JSONB
+  columns. The dummy data assumes a map keyed by condition code, with graded
+  cards storing their single price under `GRADED`. `priceFor()` in
+  `catalog.js` is the only place that assumption lives.
+- **Printings.** `Card` has no `printing` column at all. The dummy catalog
+  adds one, treating each printing as its own row with its own
+  `tcgProductId` and its own prices -- which is how TCGPlayer models it, and
+  the reason a 1st Edition Charizard can sit beside an Unlimited one at
+  eighteen times the price. Changing a cart line's printing repoints it at a
+  sibling row; `printingsFor()` finds the siblings by matching set, name, and
+  collector number, and `searchResults()` groups them behind one search
+  result. A graded card has no siblings and never groups: the slab is one
+  physical copy with its own cert number, so two of them are two results.
+- **On-hand counts.** No stock column exists anywhere; real counts belong to
+  Shopify inventory. `stockFor(card, condition)` invents one per printing
+  *and* condition -- the grain inventory actually has, since a NM copy and a
+  HP copy are different things on the shelf. Derived from the product id and
+  condition so it is stable across renders rather than flickering on every
+  keystroke.
+
+### Card images
+
+Scans come from the TCGPlayer CDN, keyed on the `tcgProductId` the `Card`
+model already carries -- so no image column is needed:
+
+```
+https://tcgplayer-cdn.tcgplayer.com/product/{tcgProductId}_in_1000x1000.jpg
+```
+
+A graded card has no `tcgProductId` of its own (the model makes it carry a
+`gradingId` instead), so `tcgProductIdFor()` borrows the id of the raw row
+with the same set, name, collector number, and printing -- the card inside
+the slab is an ordinary TCGPlayer product.
+
+`CardImage` falls back to a generated SVG placeholder when a scan fails to
+load. That fallback matters: **the `tcgProductId` values in the dummy catalog
+are invented.** Most return 403 and show the placeholder; the few that
+collide with a real product will load a real scan of some unrelated card.
+Both resolve themselves once the catalog mirror supplies true ids.
+
+One size is fetched for both the thumbnail and the hover preview. If the CDN
+publishes smaller variants, the thumbnail should use one rather than scaling
+a 1000px image down to 34px.
 
 ## Auth
 
@@ -217,10 +413,26 @@ anonymous caller if someone deliberately moves it above the guard.
 - **`sync({ alter: true })` runs on every boot.** Fine in development; against
   a production database it means Sequelize issues `ALTER`s at startup to match
   the models. Gate it behind `NODE_ENV` or adopt migrations before deploying.
-- **No customers page.** Customers can be chosen when opening a cart but not
-  created, so a walk-in you have never bought from cannot be added yet. The
-  dashboard's Customers tile currently lands on the cart list.
-- **No test runner.** There is no test script and no framework installed.
+- **`Card` has no `printing` column.** The client can switch a line between
+  printings, but the server model cannot store which one, and `CartItem`
+  records only `cardId` -- so that choice has nowhere to land until `Card`
+  gains the column and the catalog mirror populates it.
+- **`paymentType` cannot hold a split.** It is a single `ENUM` on
+  `BuyTransaction`, but the UI lets a buy be paid across cash, check, and
+  store credit at once. The dummy transaction stores an `allocation` object
+  and writes the largest slice into the ENUM so the column still has a valid
+  value -- lossy, and flagged in the code. A related `payments` table is the
+  real fix, and it would also give the store-credit bonus somewhere to live.
+- **New customers have a placeholder Shopify id.** `shopifyCustomerId` is
+  `NOT NULL` and unique, but a real one only exists once Shopify has been
+  told about the customer. Customers created at the counter get a
+  `local:pending/<id>` value and need a sync that does not exist yet.
+- **No customers page.** Customers can be created inline when opening a cart,
+  but there is nowhere to list, search, or edit them afterwards. The
+  dashboard's Customers tile lands on the cart list.
+- **jsdom is pinned to v26.** v30 pulls undici 8, which calls a zlib API
+  that does not exist before Node 22.15; the test worker crashes on 22.14.
+  Unpin once everyone is on a newer Node.
 - **Dead npm scripts.** `db:sync`, `db:sync:alter`, `db:sync:force`, and
   `db:users` point at `server/db/sync.js` and `server/db/showUsers.js`, neither
   of which exists.

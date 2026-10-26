@@ -1,0 +1,91 @@
+/*
+ * The dashboard's summary tiles.
+ */
+
+.tiles {
+  display: grid;
+  /* 10rem rather than 12rem so all four sit on one row at full width -- at
+     12rem only three fit and the action tile was stranded on a row of its
+     own. auto-fit still drops to 3, then 2, then 1 as space runs out. */
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-4);
+}
+
+.tile {
+  position: relative;
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  text-align: start;
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-1);
+  min-block-size: 7.5rem;
+  overflow: hidden;
+  transition:
+    border-color var(--duration-base) var(--ease),
+    box-shadow var(--duration-base) var(--ease),
+    translate var(--duration-base) var(--ease-out);
+}
+
+/* An accent rail down the leading edge, revealed on hover. It gives the tile
+   somewhere to go on interaction beyond changing colour, and marks it as a
+   destination rather than a readout. */
+.tile::after {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 3px;
+  background: var(--accent);
+  scale: 1 0;
+  transition: scale var(--duration-base) var(--ease-out);
+}
+
+.tile:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-3);
+  translate: 0 -3px;
+}
+
+.tile:hover::after {
+  scale: 1 1;
+}
+
+.tile-figure {
+  font-size: var(--text-4xl);
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+/* The label is the quiet half of the pair: small, spaced out, and set in
+   muted ink so the number carries the tile. */
+.tile-label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* The action tile is an action, not a count: outlined rather than filled,
+   with its mark in the accent. */
+.tile-start {
+  border-style: dashed;
+  background: none;
+  box-shadow: none;
+}
+
+.tile-start .tile-figure {
+  color: var(--accent);
+  font-weight: var(--weight-normal);
+}
+
+.tile-start:hover {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-wash);
+}
