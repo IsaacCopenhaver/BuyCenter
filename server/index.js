@@ -11,7 +11,14 @@ import sequelize from './db/database.js'
 import './models/index.js'
 
 await sequelize.authenticate()
-await sequelize.sync({ alter: true })
+
+// Opt-in: sync({ alter: true }) rewrites tables to match the models, and
+// DATABASE_URL points at a shared database. Set DB_SYNC=true to run it.
+if (process.env.DB_SYNC === 'true') {
+  await sequelize.sync({ alter: true })
+} else {
+  console.log('Skipping sequelize.sync (set DB_SYNC=true to enable)')
+}
 
 const sess = {
   secret: process.env.SESSION_SECRET,
