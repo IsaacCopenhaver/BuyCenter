@@ -17,10 +17,10 @@ Card.belongsTo(CardSet, { foreignKey: 'setId' })
 
 // One customer can have many carts
 Customer.hasMany(Cart, { foreignKey: 'customerId' })
-Cart.belongsTo(Customer, { foreignKey: 'customerId' })
+Cart.belongsTo(Customer, { foreignKey: 'customerId', as: 'customer' })
 
 // One cart has many cart items
-Cart.hasMany(CartItem, { foreignKey: 'cartId' })
+Cart.hasMany(CartItem, { foreignKey: 'cartId', as: 'items' })
 CartItem.belongsTo(Cart, { foreignKey: 'cartId' })
 
 // One card can appear in many cart items

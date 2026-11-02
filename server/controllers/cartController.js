@@ -1,5 +1,5 @@
 import sequelize from '../db/database.js'
-import { Cart, Customer, User } from '../models/index.js'
+import { Cart, CartItem, Customer, User } from '../models/index.js'
 import { parseId } from '../utils/parseId.js'
 
 // JSON bodies keep their types, so an ID must arrive as a number: true or
@@ -69,6 +69,47 @@ export async function createCart(req, res) {
         console.error('Failed to create cart: ', error)
         return res.status(500).json({
             error: 'Failed to create cart'
+        })
+    }
+}
+
+export async function getCart(req, res) {
+    try {
+        const id = parseId(req.params.id)
+
+        if (!id) {
+            return res.status(400).json({
+                error: 'Cart ID must be a positive integer'
+            })
+        }
+
+        const cart = await Cart.findByPk(id, {
+            include: [
+                { model: Customer, as: 'customer' },
+                { model: CartItem, as: 'items'},
+                {
+                    model: User,
+                    as: 'buyers',
+                    attributes: ['id', 'firstName', 'lastName', 'email'],
+                    // Hide the cart_buyers join-table columns on each buyer.
+                    through: { attributes: [] },
+                },
+            ],
+            order: [[{ model: CartItem, as: 'items' }, 'id', 'ASC']],
+        })
+
+        if (!cart) {
+            return res.status(404).json({
+                error: `Cart ${id} not found`
+            })
+        }
+
+        return res.json({ cart })
+    }
+    catch (error) {
+        console.error('Failed to fetch cart: ', error)
+        return res.status(500).json({
+            error: 'Failed to get cart'
         })
     }
 }
