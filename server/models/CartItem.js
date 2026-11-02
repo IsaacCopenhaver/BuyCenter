@@ -36,7 +36,7 @@ CartItem.init(
         },
 
         condition: {
-            type: DataTypes.STRING,
+            type: DataTypes.ENUM('NM', 'LP', 'MP', 'HP', 'DMG'),
             allowNull: true,
         },
 
