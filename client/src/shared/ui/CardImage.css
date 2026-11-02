@@ -1,0 +1,55 @@
+/*
+ * Card art: a thumbnail in a row, with a readable version on hover or
+ * keyboard focus.
+ */
+
+.thumb {
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  line-height: 0;
+  border-radius: var(--radius-sm);
+}
+
+.thumb img {
+  display: block;
+  border-radius: var(--radius-sm);
+  /* Card art is never square; letting a short scan stretch would misrepresent
+     the card. */
+  object-fit: contain;
+}
+
+/* The readable version. Taken out of the row's flow entirely so it can
+   overlap whatever is above it, and pointer-events: none so it never eats the
+   hover keeping it open. */
+.thumb-preview {
+  position: absolute;
+  inset-inline-start: calc(100% + var(--space-2));
+  inset-block-start: 50%;
+  translate: 0 -50%;
+  display: none;
+  padding: var(--space-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.thumb:hover .thumb-preview,
+.thumb:focus-visible .thumb-preview {
+  display: block;
+}
+
+/* Which side the preview opens on is a question about the row it lives in,
+   not about the window: a narrow panel on a wide screen has no room to the
+   right either. The container query asks the panel, so this is right in both
+   cases -- the viewport media query it replaces was wrong in the second.
+   Container queries: Chrome/Edge 105+, Safari 16+, Firefox 110+. */
+@container panel (width < 46rem) {
+  .thumb-preview {
+    inset-inline-start: auto;
+    inset-inline-end: calc(100% + var(--space-2));
+  }
+}

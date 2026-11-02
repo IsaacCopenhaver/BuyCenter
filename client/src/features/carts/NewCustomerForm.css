@@ -1,0 +1,55 @@
+/* --- new customer form --- */
+
+.add-customer {
+  justify-self: start;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-md);
+}
+
+.new-customer {
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.field-row label {
+  display: grid;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+}
+
+.field-actions {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* Cart-line thumbnails sit above the controls, which are bottom-aligned. */
+.line .thumb {
+  align-self: start;
+  margin-top: var(--space-1);
+}
+
+/* Groups the two contact fields, since the "at least one" rule belongs to
+   the pair rather than to either field. */
+.field-group {
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  border: 0;
+}
+
+.field-group legend {
+  padding: 0 0 var(--space-2);
+  font-size: var(--text-md);
+}
+
+.field-group .field-row {
+  margin-bottom: var(--space-2);
+}

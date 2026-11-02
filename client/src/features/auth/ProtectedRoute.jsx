@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
-import { useAuth } from '../auth/AuthContext.jsx'
+import { useAuth } from './AuthContext.jsx'
 
 // Wrap any route that requires a signed-in user. Nest routes inside this one
 // in App.jsx and they inherit the guard.

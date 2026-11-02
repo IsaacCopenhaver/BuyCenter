@@ -1,0 +1,83 @@
+/*
+ * The frame every page section sits in.
+ *
+ * Each panel is a query container, which is what lets the rows inside it
+ * reflow to the width they were actually given rather than to the viewport.
+ */
+
+.panel {
+  container: panel / inline-size;
+  position: relative;
+
+  margin-block-start: var(--space-5);
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-2);
+}
+
+/* A one-pixel highlight along the top edge. This is the detail that makes a
+   surface read as lit from above and sitting on the page, rather than as a
+   rectangle with a border drawn round it. */
+.panel::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: var(--space-5);
+  block-size: 1px;
+  background: var(--edge-highlight);
+  pointer-events: none;
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--space-4);
+  margin-block-end: var(--space-5);
+  padding-block-end: var(--space-4);
+  /* A rule under the head separates the section's title from its contents
+     without needing a gap big enough to do the same job. */
+  border-block-end: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.panel-head h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-bold);
+}
+
+.panel-head p {
+  margin-block: var(--space-1) 0;
+  font-size: var(--text-md);
+  color: var(--text-muted);
+  font-weight: var(--weight-normal);
+}
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.panel-toggle {
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.panel-toggle:hover:not(:disabled) {
+  color: var(--text);
+}
+
+/* A panel holding nothing but an empty state does not need a rule under its
+   head holding space for rows that are not there. :has() rather than a flag
+   the component would have to calculate and pass down. */
+.panel:has(> .empty, > .board-empty:only-of-type) .panel-head {
+  margin-block-end: 0;
+  padding-block-end: 0;
+  border-block-end: 0;
+}

@@ -1,0 +1,58 @@
+/*
+ * Status pills.
+ *
+ * The word carries the status; the tint only reinforces it. A dot rather
+ * than a filled pill keeps the colour present without turning every row
+ * into a block of saturated background.
+ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-block: var(--space-1);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface-sunken);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.badge-in_progress,
+.badge-completed {
+  position: relative;
+  padding-inline-start: var(--space-5);
+}
+
+.badge-in_progress::before,
+.badge-completed::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: var(--space-2);
+  inline-size: 6px;
+  block-size: 6px;
+  border-radius: var(--radius-full);
+}
+
+.badge-in_progress {
+  border-color: color-mix(in srgb, var(--accent) 38%, transparent);
+  background: var(--accent-wash);
+  color: var(--text);
+}
+
+.badge-in_progress::before {
+  background: var(--accent);
+  /* A soft halo so the live state reads as live at a glance down a list. */
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+.badge-completed {
+  color: var(--text-muted);
+}
+
+.badge-completed::before {
+  background: var(--text-faint);
+}

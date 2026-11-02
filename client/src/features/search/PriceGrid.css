@@ -1,0 +1,107 @@
+/* --- printing x condition grid --- */
+
+.grid-wrap {
+  overflow-x: auto;
+  margin: 0 0 var(--space-2) var(--space-10);
+}
+
+.price-grid {
+  border-collapse: collapse;
+  font-size: var(--text-md);
+}
+
+.price-grid caption {
+  padding: var(--space-1) 0;
+  font-size: var(--text-sm);
+  text-align: left;
+}
+
+.price-grid th,
+.price-grid td {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  font-weight: normal;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.price-grid thead th,
+.price-grid tbody th {
+  text-align: left;
+  color: var(--text-muted);
+}
+
+/* The printing the row in the search result is actually for. */
+.price-grid tr.is-current th,
+.price-grid tr.is-current td {
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.price-grid tr.is-current th {
+  color: inherit;
+  font-weight: 600;
+}
+
+.grid-cell {
+  width: 100%;
+  padding: var(--space-1) var(--space-1);
+  border: 0;
+  border-radius: var(--radius-xs);
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.grid-cell:hover,
+.grid-cell:focus-visible {
+  background: color-mix(in srgb, var(--series) 22%, transparent);
+}
+
+/* --- price + stock grid cells --- */
+
+/* Price over count, so a column scans as prices with the counts as a quieter
+   second row rather than two numbers competing. */
+.grid-cell {
+  display: grid;
+  gap: var(--space-1);
+  width: 100%;
+  padding: var(--space-1) var(--space-1);
+  border: 0;
+  border-radius: var(--radius-xs);
+  text-align: right;
+  background: none;
+  color: inherit;
+}
+
+.grid-cell.is-static {
+  cursor: default;
+}
+
+button.grid-cell:hover,
+button.grid-cell:focus-visible {
+  background: color-mix(in srgb, var(--series) 22%, transparent);
+}
+
+.grid-price {
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+}
+
+.grid-stock {
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+/* Nothing on the shelf in that printing and condition. Dimmed rather than
+   hidden -- it is still a combination you can buy into. */
+.price-grid td.is-empty .grid-price {
+  color: var(--text-muted);
+}
+
+/* Printing names run long ("1st Edition Holofoil"), so the picker needs more
+   room than the condition one beside it. */
+.result-printing select {
+  max-width: 10.5rem;
+}

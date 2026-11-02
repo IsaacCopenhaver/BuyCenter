@@ -1,0 +1,125 @@
+/*
+ * The floating confirmation banner.
+ */
+
+/* The always-mounted live region. It has no box of its own, so an empty one
+   cannot intercept a click or take up space. */
+.banner-region {
+  position: fixed;
+  inset-block-start: calc(var(--bar-height) + var(--space-3));
+  inset-inline: 0;
+  z-index: 60;
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-inline-size: min(40rem, calc(100vw - var(--space-8)));
+  padding-block: var(--space-3);
+  padding-inline: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+  font-size: var(--text-md);
+  /* The region ignores pointer events so the page stays usable underneath;
+     the banner itself takes them back so it can be dismissed. */
+  pointer-events: auto;
+  animation: banner-in var(--duration-base) var(--ease-out);
+}
+
+/* A colour rail on the leading edge rather than a tinted background: the
+   banner stays legible as a surface and the tone is still unmistakable. */
+.banner::before {
+  content: '';
+  align-self: stretch;
+  inline-size: 3px;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+}
+
+.banner-accent::before {
+  background: var(--accent);
+}
+
+.banner-positive::before {
+  background: var(--positive);
+}
+
+.banner-danger::before {
+  background: var(--danger);
+}
+
+.banner-body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-inline-size: 0;
+}
+
+.banner-close {
+  flex: 0 0 auto;
+  padding-block: 0;
+  padding-inline: var(--space-2);
+  border: 0;
+  background: none;
+  box-shadow: none;
+  font-size: var(--text-xl);
+  line-height: 1;
+  color: var(--text-muted);
+}
+
+.banner-close:hover:not(:disabled) {
+  background: var(--surface-inset);
+  box-shadow: none;
+  color: var(--text);
+}
+
+/* Drops in from under the bar, which is where it comes from. */
+@keyframes banner-in {
+  from {
+    opacity: 0;
+    translate: 0 -0.5rem;
+    scale: 0.98;
+  }
+}
+
+/* --- the add-to-cart message --- */
+
+.banner-thumb img {
+  display: block;
+  border-radius: var(--radius-xs);
+}
+
+.banner-text {
+  display: grid;
+  gap: 0.1rem;
+  min-inline-size: 0;
+}
+
+.banner-title {
+  font-weight: var(--weight-bold);
+}
+
+.banner-meta {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.banner-count {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  min-inline-size: 1.75rem;
+  padding-inline: var(--space-2);
+  padding-block: var(--space-1);
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-bold);
+}

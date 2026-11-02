@@ -1,0 +1,43 @@
+/* --- login (index) --- */
+
+.login {
+  display: grid;
+  place-items: center;
+  max-inline-size: 25rem;
+}
+
+.card {
+  position: relative;
+  inline-size: 100%;
+  padding-block: var(--space-10);
+  padding-inline: var(--space-8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  background: var(--surface);
+  box-shadow: var(--shadow-3);
+  overflow: hidden;
+}
+
+/* A brand rule across the top of the card: the one place the sign-in screen
+   says whose tool this is before you are inside it. */
+.card::before {
+  content: '';
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline: 0;
+  block-size: 3px;
+  background: linear-gradient(90deg, var(--brand-600), var(--brand-400));
+}
+
+.card-head {
+  margin-bottom: var(--space-6);
+}
+
+.card-head h1 {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-2xl);
+}
+
+.card-head p {
+  margin: 0;
+}

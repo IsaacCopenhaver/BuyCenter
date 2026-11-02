@@ -1,0 +1,80 @@
+/* --- completing a buy --- */
+
+.complete-row {
+  display: flex;
+  align-items: end;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.complete-row .cart-total {
+  margin-left: auto;
+}
+
+/* Printing names run long ("1st Edition Holofoil"), so this one gets more
+   room than the other line controls. */
+.line-printing input,
+.line-printing select {
+  width: 11rem;
+}
+
+/* --- payment split --- */
+
+.panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.pay-split {
+  display: flex;
+  align-items: end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+}
+
+.pay-split input[type='number'] {
+  width: 7rem;
+}
+
+.pay-fill {
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-md);
+  color: var(--text-muted);
+}
+
+.pay-fill:hover {
+  color: inherit;
+}
+
+.payout {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-5);
+  font-size: var(--text-base);
+}
+
+.payout > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-4);
+}
+
+.payout dt,
+.payout dd {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+.payout dd {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* An allocation that does not add up to the cart total blocks checkout, so
+   it is marked as wrong rather than just sitting there. */
+.payout dd.is-off {
+  color: var(--danger);
+}

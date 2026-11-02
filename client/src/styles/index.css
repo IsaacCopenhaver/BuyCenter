@@ -1,0 +1,19 @@
+/*
+ * The global layer, in cascade order. Everything else is co-located with the
+ * component it styles and imported by that component.
+ *
+ *   tokens     the values everything else resolves to
+ *   base       unclassed elements and form controls
+ *   layout     page shells
+ *   utilities  small classes shared across features
+ */
+@import './tokens.css';
+@import './base.css';
+@import './layout.css';
+@import './utilities.css';
+
+/* Shared UI primitives: plain classes used directly in markup across every
+   feature, so they belong to the global layer rather than to any one of
+   them. */
+@import '../shared/ui/Panel.css';
+@import '../shared/ui/Badge.css';

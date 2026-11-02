@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { useAuth } from '../auth/AuthContext.jsx'
+import { useAuth } from './AuthContext.jsx'
+import './Login.css'
 
 export default function Login() {
   const { user, loading, login } = useAuth()
@@ -70,7 +71,7 @@ export default function Login() {
             </p>
           )}
 
-          <button type="submit" disabled={submitting}>
+          <button type="submit" className="button-primary" disabled={submitting}>
             {submitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>

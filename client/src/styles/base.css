@@ -1,0 +1,193 @@
+/*
+ * Element defaults and form controls: what a bare <button> or <input> looks
+ * like before any component touches it.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  font-family: var(--font-sans);
+  /* Tabular figures throughout. Prices and counts sit in columns and have to
+     line up; proportional digits make a price list look ragged. */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: var(--font-numeric);
+  overflow-wrap: break-word;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-block-size: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/*
+ * The layout column lives on #root, not on body.
+ *
+ * React mounts into #root, so body's only child is that div. Making body the
+ * flex container leaves #root as the flex *item* -- and with align-items:
+ * center it shrink-wraps to its content instead of filling the width, so the
+ * bar and the page column each size themselves and stop lining up.
+ */
+#root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-block-size: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  font-weight: var(--weight-bold);
+}
+
+code {
+  padding-block: 0.1em;
+  padding-inline: 0.35em;
+  border-radius: var(--radius-xs);
+  background: var(--surface-inset);
+  font-family: ui-monospace, 'SFMono-Regular', 'Cascadia Mono', monospace;
+  font-size: 0.92em;
+}
+
+/* --- form controls --- */
+
+input,
+select,
+textarea {
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-sunken);
+  color: var(--text);
+  transition:
+    border-color var(--duration-fast) var(--ease),
+    background var(--duration-fast) var(--ease),
+    box-shadow var(--duration-fast) var(--ease);
+}
+
+input:hover:not(:disabled),
+select:hover:not(:disabled),
+textarea:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+/* The accent ring rather than a bare outline: it reads as the field becoming
+   active instead of the browser drawing on top of it. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--accent-ring);
+}
+
+input:disabled,
+select:disabled,
+textarea:disabled {
+  background: var(--surface-inset);
+  color: var(--text-muted);
+  cursor: default;
+}
+
+select {
+  /* Room for the native arrow so the longest option is not clipped. */
+  padding-inline-end: var(--space-5);
+}
+
+/* The native menu is painted by the OS, so it needs a real surface colour or
+   dark-mode options render dark-on-dark. */
+select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+input[type='checkbox'] {
+  inline-size: 1rem;
+  block-size: 1rem;
+  padding: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* --- buttons ---
+ * The default is the quiet one. Loud actions opt in with .button-primary.
+ */
+button {
+  font: inherit;
+  font-weight: var(--weight-medium);
+  padding-block: var(--space-2);
+  padding-inline: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-raised);
+  color: var(--text);
+  cursor: pointer;
+  box-shadow: var(--shadow-1);
+  transition:
+    border-color var(--duration-fast) var(--ease),
+    background var(--duration-fast) var(--ease),
+    box-shadow var(--duration-fast) var(--ease),
+    translate var(--duration-fast) var(--ease);
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-2);
+}
+
+/* Presses down rather than just changing colour -- the only thing that makes
+   a button feel like a button. */
+button:active:not(:disabled) {
+  translate: 0 1px;
+  box-shadow: none;
+}
+
+button:disabled {
+  cursor: default;
+  opacity: 0.5;
+  box-shadow: none;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: var(--focus-offset);
+}
+
+::selection {
+  background: var(--accent-ring);
+}
+
+/* Durations are tokens precisely so they can all be switched off here. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

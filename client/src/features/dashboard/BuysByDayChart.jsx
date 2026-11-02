@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from 'react'
+import './BuysByDayChart.css'
 
 const DAYS = 7
 
@@ -23,7 +24,11 @@ function dayKey(date) {
 }
 
 const shortDay = new Intl.DateTimeFormat(undefined, { weekday: 'short' })
-const longDay = new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'short', day: 'numeric' })
+const longDay = new Intl.DateTimeFormat(undefined, {
+  weekday: 'long',
+  month: 'short',
+  day: 'numeric',
+})
 
 // Four bands of a whole number, so every gridline is an integer -- a "2.5 buys"
 // tick would be nonsense. Floors the top at 4 so an empty week still has a
@@ -54,7 +59,7 @@ export default function BuysByDayChart({ counts = null, onSelectDay }) {
       const key = dayKey(date)
       // A day the API didn't mention had no completed buys -- that's a real
       // zero. Only an absent `counts` map means "unknown".
-      return { key, date, count: loaded ? counts[key] ?? 0 : null }
+      return { key, date, count: loaded ? (counts[key] ?? 0) : null }
     })
   }, [counts])
 
