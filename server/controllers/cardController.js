@@ -1,6 +1,7 @@
 import { Op } from 'sequelize'
 import { Card, CardSet } from '../models/index.js'
 import { parseId } from '../utils/parseId.js'
+import { paginationMeta, parsePagination } from '../utils/pagination.js'
 
 const MAX_Q_LENGTH = 100
 
@@ -12,16 +13,16 @@ function escapeLike(value) {
 
 export async function getCards(req, res) {
     try {
-        const page = Number(req.query.page ?? 1)
-        const limit = Number(req.query.limit ?? 10)
-
-        if (!Number.isInteger(page) || page < 1 ||
-            !Number.isInteger(limit) || limit < 1 || limit > 100) {
+        const pagination = parsePagination(req.query)
+        
+        if (!pagination) {
             return res.status(400).json({
                 error: 'Invalid pagination parameters'
             })
         }
 
+        const { page, limit, offset } = pagination
+         
         const q = req.query.q
 
         if (q !== undefined && typeof q !== 'string') {
@@ -69,8 +70,6 @@ export async function getCards(req, res) {
             })
         }
 
-        const offset = (page - 1) * limit
-
         const { count, rows } = await Card.findAndCountAll({
             where,
             include,
@@ -81,12 +80,7 @@ export async function getCards(req, res) {
 
         return res.json({
             data: rows,
-            pagination: {
-                page,
-                limit,
-                total: count,
-                totalPages: Math.ceil(count / limit)
-            }
+            pagination: paginationMeta(page, limit, count)
         })
     } catch (error) {
         console.error('Failed to fetch cards:', error)
