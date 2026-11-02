@@ -1,6 +1,10 @@
 import sequelize from '../db/database.js'
 import { Cart, CartItem, Customer, User } from '../models/index.js'
 import { parseId } from '../utils/parseId.js'
+import { paginationMeta, parsePagination } from '../utils/pagination.js'
+
+// Read from the model so this list can't drift from the ENUM.
+const CART_STATUSES = Cart.getAttributes().status.values
 
 // JSON bodies keep their types, so an ID must arrive as a number: true or
 // "5" is a client bug, not an ID. undefined/null mean "not provided".
@@ -110,6 +114,57 @@ export async function getCart(req, res) {
         console.error('Failed to fetch cart: ', error)
         return res.status(500).json({
             error: 'Failed to get cart'
+        })
+    }
+}
+
+export async function getCarts(req, res) {
+    try {
+        const pagination = parsePagination(req.query)
+
+        if (!pagination) {
+            return res.status(400).json({
+                error: 'Invalid pagination parameters'
+            })
+        }
+
+        const { page, limit, offset } = pagination
+        const { status } = req.query
+
+        if (status !== undefined && 
+            status !== '' && 
+            !CART_STATUSES.includes(status)) {
+                return res.status(400).json({
+                    error: `status must be one of: ${CART_STATUSES.join(', ')}`
+                })
+            }
+        
+        const where = {}
+
+        if (status) {
+            where.status = status
+        }
+
+        const { count, rows } = await Cart.findAndCountAll({
+            where,
+            include: [{
+                model: Customer,
+                as: 'customer',
+                attributes: ['id', 'firstName', 'lastName'],
+            }],
+            limit,
+            offset,
+            order: [['createdAt', 'DESC'], ['id', 'DESC']],
+        })
+
+        return res.json({
+            data: rows,
+            pagination: paginationMeta(page, limit, count)
+        })
+    } catch (error) {
+        console.error('Failed to fetch carts: ', error)
+        return res.status(500).json({
+            error: 'Failed to fetch carts'
         })
     }
 }
