@@ -1,10 +1,29 @@
 import sequelize from '../db/database.js'
-import { Cart, CartItem, Customer, User } from '../models/index.js'
+import { Card, Cart, CartItem, Customer, User } from '../models/index.js'
 import { parseId } from '../utils/parseId.js'
 import { paginationMeta, parsePagination } from '../utils/pagination.js'
 
 // Read from the model so this list can't drift from the ENUM.
 const CART_STATUSES = Cart.getAttributes().status.values
+const CONDITIONS = CartItem.getAttributes().condition.values
+const MAX_PRICE_CENTS = 9999999999 // DECIMAL(10, 2) max: 99,999,999.99
+
+// Money arrives as a JSON number. Work in whole cents so float noise
+// (0.29 * 100 = 28.999...) can't slip in, and reject more than 2 decimals.
+// Returns a "3.50"-style string for the DECIMAL column, or null if invalid.
+function parseOfferPrice(value) {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+        return null
+    }
+
+    const cents = Math.round(value * 100)
+
+    if ((Math.abs(value * 100 - cents) > 1e-6) || cents > MAX_PRICE_CENTS) {
+        return null
+    }
+
+    return (cents / 100).toFixed(2)
+}
 
 // JSON bodies keep their types, so an ID must arrive as a number: true or
 // "5" is a client bug, not an ID. undefined/null mean "not provided".
@@ -165,6 +184,90 @@ export async function getCarts(req, res) {
         console.error('Failed to fetch carts: ', error)
         return res.status(500).json({
             error: 'Failed to fetch carts'
+        })
+    }
+}
+
+export async function addCartItem(req, res) {
+    try {
+        const cartId = parseId(req.params.id)
+
+        if (!cartId) {
+            return res.status(400).json({
+                error: 'Cart ID must be a positive integer'
+            })
+        }
+
+        const { cardId, printing, condition, grade } = req.body ?? {}
+        const quantity = parseBodyId(req.body?.quantity)
+        const offerPrice = parseOfferPrice(req.body?.offerPrice)
+
+        if (grade != null) {
+            return res.status(400).json({
+                error: 'Graded items are not supported yet'
+            })
+        }
+    
+        if (typeof cardId !== 'string' || cardId === '') {
+            return res.status(400).json({
+                 error: 'cardId is required'
+            })
+        }
+
+        if (typeof printing !== 'string' || printing.trim() === '') {
+            return res.status(400).json({ error: 'printing is required' })
+        }
+
+        if (!CONDITIONS.includes(condition)) {
+            return res.status(400).json({
+                error: `condition must be one of: ${CONDITIONS.join(', ')}`
+            })
+        }
+
+        if (!quantity) {
+            return res.status(400).json({
+                error: 'quantity must be a positive integer'
+            })
+        }
+
+        if (offerPrice === null) {
+            return res.status(400).json({
+                error: 'offer price must be a non-negative number with at most 2 decimals'
+            })
+        }
+
+        const cart = await Cart.findByPk(cartId)
+
+        if (!cart) {
+            return res.status(404).json({ error: `Cart ${cartId} not found` })
+        }
+
+        if (cart.status !== 'in_progress') {
+            return res.status(409).json({
+                error: `Cart ${cartId} is ${cart.status} and can't be changed`
+            })
+        }
+        
+        if (!(await Card.findByPk(cardId))) {
+            return res.status(400).json({
+                error: `Card ${cardId} does not exist`
+            })
+        }
+
+        const item = await CartItem.create({
+            cartId,
+            cardId,
+            printing: printing.trim(),
+            condition,
+            quantity,
+            offerPrice,
+        })
+
+        return res.status(201).json({ item })
+    } catch (error) {
+        console.error('Failed to add cart item: ', error)
+        return res.status(500).json({
+            error: 'Failed to add cart item'
         })
     }
 }
