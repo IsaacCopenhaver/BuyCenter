@@ -236,34 +236,69 @@ export async function addCartItem(req, res) {
             })
         }
 
-        const cart = await Cart.findByPk(cartId)
-
-        if (!cart) {
-            return res.status(404).json({ error: `Cart ${cartId} not found` })
-        }
-
-        if (cart.status !== 'in_progress') {
-            return res.status(409).json({
-                error: `Cart ${cartId} is ${cart.status} and can't be changed`
-            })
-        }
-        
+        // Cards are read-only here (no catalog CRUD), so this check can sit
+        // outside the transaction.
         if (!(await Card.findByPk(cardId))) {
             return res.status(400).json({
                 error: `Card ${cardId} does not exist`
             })
         }
 
-        const item = await CartItem.create({
-            cartId,
-            cardId,
-            printing: printing.trim(),
-            condition,
-            quantity,
-            offerPrice,
+        const result = await sequelize.transaction(async (transaction) => {
+            // SELECT ... FOR UPDATE: concurrent adds/checkouts on this cart
+            // wait here until we commit, so the check-then-write below can't
+            // interleave with another request.
+            const cart = await Cart.findByPk(cartId, {
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+            })
+
+            if (!cart) {
+                return { status: 404, body: { error: `Cart ${cartId} not found` } }
+            }
+
+            if (cart.status !== 'in_progress') {
+                return {
+                    status: 409,
+                    body: { error: `Cart ${cartId} is ${cart.status} and can't be changed` },
+                }
+            }
+
+            // Merge rule: same card + printing + condition + price.
+            const existing = await CartItem.findOne({
+                where: {
+                    cartId,
+                    cardId,
+                    printing: printing.trim(),
+                    condition,
+                    offerPrice,
+                    grade: null,
+                },
+                order: [['id', 'ASC']],
+                transaction,
+            })
+
+            if (existing) {
+                // Safe read-modify-write: the cart lock means no one else can
+                // change this cart's items until we commit.
+                existing.quantity += quantity
+                await existing.save({ transaction })
+                return { status: 200, body: { item: existing } }
+            }
+
+            const item = await CartItem.create({
+                cartId,
+                cardId,
+                printing: printing.trim(),
+                condition,
+                quantity,
+                offerPrice,
+            }, { transaction })
+
+            return { status: 201, body: { item } }
         })
 
-        return res.status(201).json({ item })
+        return res.status(result.status).json(result.body)
     } catch (error) {
         console.error('Failed to add cart item: ', error)
         return res.status(500).json({
