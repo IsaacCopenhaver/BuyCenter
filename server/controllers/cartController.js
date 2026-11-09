@@ -188,6 +188,64 @@ export async function getCarts(req, res) {
     }
 }
 
+// Validates the item fields shared by POST and PATCH. Pure: no DB, no req/res.
+// partial: false (POST) -> every field is required.
+// partial: true (PATCH) -> a missing field is skipped (left unchanged), but a
+// present one, including null, must be valid.
+// Returns { error } for the first failing rule, otherwise { values } holding
+// only the fields that were present, already cleaned.
+function validateItemFields(body, { partial }) {
+    const shouldCheck = (field) => !partial || body[field] !== undefined
+    const values = {}
+
+    if (body.grade != null) {
+        return { error: 'Graded items are not supported yet' }
+    }
+
+    if (shouldCheck('printing')) {
+        const { printing } = body
+
+        if (typeof printing !== 'string' || printing.trim() === '') {
+            return { error: 'printing is required' }
+        }
+
+        values.printing = printing.trim()
+    }
+
+    if (shouldCheck('condition')) {
+        if (!CONDITIONS.includes(body.condition)) {
+            return { error: `condition must be one of: ${CONDITIONS.join(', ')}` }
+        }
+
+        values.condition = body.condition
+    }
+
+    if (shouldCheck('quantity')) {
+        // Same rule as an ID: a positive integer sent as a JSON number.
+        const quantity = parseBodyId(body.quantity)
+
+        if (!quantity) {
+            return { error: 'quantity must be a positive integer' }
+        }
+
+        values.quantity = quantity
+    }
+
+    if (shouldCheck('offerPrice')) {
+        const offerPrice = parseOfferPrice(body.offerPrice)
+
+        if (offerPrice === null) {
+            return {
+                error: 'offer price must be a non-negative number with at most 2 decimals'
+            }
+        }
+
+        values.offerPrice = offerPrice
+    }
+
+    return { values }
+}
+
 export async function addCartItem(req, res) {
     try {
         const cartId = parseId(req.params.id)
@@ -198,43 +256,20 @@ export async function addCartItem(req, res) {
             })
         }
 
-        const { cardId, printing, condition, grade } = req.body ?? {}
-        const quantity = parseBodyId(req.body?.quantity)
-        const offerPrice = parseOfferPrice(req.body?.offerPrice)
+        const body = req.body ?? {}
+        const { error, values } = validateItemFields(body, { partial: false })
 
-        if (grade != null) {
-            return res.status(400).json({
-                error: 'Graded items are not supported yet'
-            })
+        if (error) {
+            return res.status(400).json({ error })
         }
-    
+
+        const { cardId } = body
+
         if (typeof cardId !== 'string' || cardId === '') {
-            return res.status(400).json({
-                 error: 'cardId is required'
-            })
+            return res.status(400).json({ error: 'cardId is required' })
         }
 
-        if (typeof printing !== 'string' || printing.trim() === '') {
-            return res.status(400).json({ error: 'printing is required' })
-        }
-
-        if (!CONDITIONS.includes(condition)) {
-            return res.status(400).json({
-                error: `condition must be one of: ${CONDITIONS.join(', ')}`
-            })
-        }
-
-        if (!quantity) {
-            return res.status(400).json({
-                error: 'quantity must be a positive integer'
-            })
-        }
-
-        if (offerPrice === null) {
-            return res.status(400).json({
-                error: 'offer price must be a non-negative number with at most 2 decimals'
-            })
-        }
+        const { printing, condition, quantity, offerPrice } = values
 
         // Cards are read-only here (no catalog CRUD), so this check can sit
         // outside the transaction.
