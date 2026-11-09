@@ -278,3 +278,62 @@ export async function addCartItem(req, res) {
         })
     }
 }
+
+export async function deleteCartItem(req, res) {
+    try {
+        const cartId = parseId(req.params.id)
+        const itemId = parseId(req.params.itemId)
+
+        if (!cartId || !itemId) {
+            return res.status(400).json({
+                error: 'CartId and item ID must be positive integers'
+            })
+        }
+
+        const result = await sequelize.transaction(async (transaction) => {
+            // Same lock as add/update: a checkout can't complete mid-delete.
+            const cart = await Cart.findByPk(cartId, {
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+            })
+            
+            if (!cart) {
+                return { status: 404, body: { error: `Cart ${cartId} not found` } }
+            }
+            
+            if (cart.status !== 'in_progress') {
+                return {
+                    status: 409,
+                    body: { error: `Cart ${cartId} is ${cart.status} and can't be changed` },
+                }
+            }
+            
+            // One DELETE ... WHERE id AND cartId; returns how many rows it removed.
+            // Scoped to the cart, like PATCH.
+            const deletedCount = await CartItem.destroy({
+                where: { id: itemId, cartId },
+                transaction,
+            })
+
+            if (deletedCount === 0) {
+                return {
+                    status: 404,
+                    body: { error: `Item ${itemId} not found in cart ${cartId}` },
+                }
+            }
+
+            return { status: 204 }
+        })
+
+        if (result.status === 204) {
+            return res.status(204).end()
+        }
+
+        return res.status(result.status).json(result.body)
+    } catch (error) {
+        console.error('Failed to delete cart item: ', error)
+        return res.status(500).json({
+            error: 'Failed to delete cart item'
+        })
+    }
+}
