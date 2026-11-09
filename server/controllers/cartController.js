@@ -162,3 +162,120 @@ export async function getCarts(req, res) {
         })
     }
 }
+
+export async function addCartBuyer(req, res) {
+    try {
+        const cartId = parseId(req.params.id)
+        const userId = parseId(req.params.userId)
+
+        if (!cartId || !userId) {
+            return res.status(400).json({
+                error: 'Cart ID and user ID must be positive integers'
+            })
+        }
+
+        const result = await sequelize.transaction(async (transaction) => {
+            const cart = await Cart.findByPk(cartId, {
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+            })
+
+            if (!cart) {
+                return { status: 404, body: { error: `Cart ${cartId} not found` } }
+            }
+
+            if (cart.status !== 'in_progress') {
+                return {
+                    status: 409,
+                    body: { error: `Cart ${cartId} is ${cart.status} and can't be changed` },
+                }
+            }
+
+            const user = await User.findByPk(userId, {
+                attributes: ['id'],
+                transaction,
+            })
+
+            if (!user) {
+                return { status: 404, body: { error: `User ${userId} not found` } }
+            }
+
+            // Inserts the cart_buyers row only if it's missing, so adding
+            // someone who's already a buyer is a harmless no-op.
+            await cart.addBuyer(user, { transaction })
+
+            return { status: 204 }
+        })
+
+        if (result.status === 204) {
+            return res.status(204).end()
+        }
+
+        return res.status(result.status).json(result.body)
+    } catch (error) {
+        console.error('Failed to add cart buyer: ', error)
+        return res.status(500).json({
+            error: 'Failed to add cart buyer'
+        })
+    }
+}
+
+export async function removeCartBuyer(req, res) {
+    try {
+        const cartId = parseId(req.params.id)
+        const userId = parseId(req.params.userId)
+
+        if (!cartId || !userId) {
+            return res.status(400).json({
+                error: 'Cart ID and user ID must be positive integers'
+            })
+        }
+
+        const result = await sequelize.transaction(async (transaction) => {
+            const cart = await Cart.findByPk(cartId, {
+                transaction,
+                lock: transaction.LOCK.UPDATE,
+            })
+
+            if (!cart) {
+                return { status: 404, body: { error: `Cart ${cartId} not found` } }
+            }
+
+            if (cart.status !== 'in_progress') {
+                return {
+                    status: 409,
+                    body: { error: `Cart ${cartId} is ${cart.status} and can't be changed` },
+                }
+            }
+
+            if (!(await cart.hasBuyer(userId, { transaction }))) {
+                return {
+                    status: 404,
+                    body: { error: `User ${userId} is not a buyer on cart ${cartId}` },
+                }
+            }
+
+            if ((await cart.countBuyers({ transaction })) === 1) {
+                return {
+                    status: 409,
+                    body: { error: 'A cart must keep at least one buyer' },
+                }
+            }
+
+            await cart.removeBuyer(userId, { transaction })
+
+            return { status: 204 }
+        })
+
+        if (result.status === 204) {
+            return res.status(204).end()
+        }
+
+        return res.status(result.status).json(result.body)
+    } catch (error) {
+        console.error('Failed to remove cart buyer: ', error)
+        return res.status(500).json({
+            error: 'Failed to remove cart buyer'
+        })
+    }
+}
