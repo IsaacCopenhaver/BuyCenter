@@ -1,5 +1,6 @@
 import { Router } from 'express'
-import { addCartItem, createCart, getCart, getCarts } from '../controllers/cartController.js'
+import { createCart, getCart, getCarts } from '../controllers/cartController.js'
+import { addCartItem, updateCartItem } from '../controllers/cartItemController.js'
 
 const router = Router()
 
@@ -7,5 +8,6 @@ router.post('/:id/items', addCartItem)
 router.get('/', getCarts)
 router.post('/', createCart)
 router.get('/:id', getCart)
+router.patch('/:id/items/:itemId', updateCartItem)
 
 export default router
