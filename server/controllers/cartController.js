@@ -2,6 +2,7 @@ import sequelize from '../db/database.js'
 import { Cart, CartItem, Customer, User } from '../models/index.js'
 import { parseBodyId, parseId } from '../utils/parseId.js'
 import { paginationMeta, parsePagination } from '../utils/pagination.js'
+import { USER_PUBLIC_ATTRIBUTES } from '../models/User.js'
 
 // Read from the model so this list can't drift from the ENUM.
 const CART_STATUSES = Cart.getAttributes().status.values
@@ -87,7 +88,7 @@ export async function getCart(req, res) {
                 {
                     model: User,
                     as: 'buyers',
-                    attributes: ['id', 'firstName', 'lastName', 'email'],
+                    attributes: USER_PUBLIC_ATTRIBUTES,
                     // Hide the cart_buyers join-table columns on each buyer.
                     through: { attributes: [] },
                 },
