@@ -1,6 +1,8 @@
 import { Op } from 'sequelize'
 import sequelize from '../db/database.js'
-import { Card, Cart, CartItem } from '../models/index.js'
+import { Card, CartItem } from '../models/index.js'
+import { lockEditableCart } from '../utils/cartLock.js'
+import { sendResult } from '../utils/sendResult.js'
 import { parseBodyId, parseId } from '../utils/parseId.js'
 
 // Read from the model so this list can't drift from the ENUM.
@@ -55,21 +57,10 @@ export async function updateCartItem(req, res) {
         }
 
         const result = await sequelize.transaction(async (transaction) => {
-            // Same lock as addCartItem: one writer per cart at a time.
-            const cart = await Cart.findByPk(cartId, {
-                transaction,
-                lock: transaction.LOCK.UPDATE,
-            })
+            const { response } = await lockEditableCart(cartId, transaction)
 
-            if (!cart) {
-                return { status: 404, body: { error: `Cart ${cartId} not found` } }
-            }
-
-            if (cart.status !== 'in_progress') {
-                return {
-                    status: 409,
-                    body: { error: `Cart ${cartId} is ${cart.status} and can't be changed` },
-                }
+            if (response) {
+                return response
             }
 
             // Scoped to the cart in the URL, so an item from another cart
@@ -116,7 +107,7 @@ export async function updateCartItem(req, res) {
             return { status: 200, body: { item } }
         })
 
-        return res.status(result.status).json(result.body)
+        return sendResult(res, result)
     } catch (error) {
         console.error('Failed to update cart item: ', error)
         return res.status(500).json({
@@ -217,23 +208,10 @@ export async function addCartItem(req, res) {
         }
 
         const result = await sequelize.transaction(async (transaction) => {
-            // SELECT ... FOR UPDATE: concurrent adds/checkouts on this cart
-            // wait here until we commit, so the check-then-write below can't
-            // interleave with another request.
-            const cart = await Cart.findByPk(cartId, {
-                transaction,
-                lock: transaction.LOCK.UPDATE,
-            })
+            const { response } = await lockEditableCart(cartId, transaction)
 
-            if (!cart) {
-                return { status: 404, body: { error: `Cart ${cartId} not found` } }
-            }
-
-            if (cart.status !== 'in_progress') {
-                return {
-                    status: 409,
-                    body: { error: `Cart ${cartId} is ${cart.status} and can't be changed` },
-                }
+            if (response) {
+                return response
             }
 
             // Merge rule: same card + printing + condition + price.
@@ -270,7 +248,7 @@ export async function addCartItem(req, res) {
             return { status: 201, body: { item } }
         })
 
-        return res.status(result.status).json(result.body)
+        return sendResult(res, result)
     } catch (error) {
         console.error('Failed to add cart item: ', error)
         return res.status(500).json({
@@ -291,21 +269,10 @@ export async function deleteCartItem(req, res) {
         }
 
         const result = await sequelize.transaction(async (transaction) => {
-            // Same lock as add/update: a checkout can't complete mid-delete.
-            const cart = await Cart.findByPk(cartId, {
-                transaction,
-                lock: transaction.LOCK.UPDATE,
-            })
-            
-            if (!cart) {
-                return { status: 404, body: { error: `Cart ${cartId} not found` } }
-            }
-            
-            if (cart.status !== 'in_progress') {
-                return {
-                    status: 409,
-                    body: { error: `Cart ${cartId} is ${cart.status} and can't be changed` },
-                }
+            const { response } = await lockEditableCart(cartId, transaction)
+
+            if (response) {
+                return response
             }
             
             // One DELETE ... WHERE id AND cartId; returns how many rows it removed.
@@ -325,11 +292,7 @@ export async function deleteCartItem(req, res) {
             return { status: 204 }
         })
 
-        if (result.status === 204) {
-            return res.status(204).end()
-        }
-
-        return res.status(result.status).json(result.body)
+        return sendResult(res, result)
     } catch (error) {
         console.error('Failed to delete cart item: ', error)
         return res.status(500).json({

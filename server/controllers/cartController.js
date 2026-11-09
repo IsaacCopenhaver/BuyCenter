@@ -3,6 +3,8 @@ import { Cart, CartItem, Customer, User } from '../models/index.js'
 import { parseBodyId, parseId } from '../utils/parseId.js'
 import { paginationMeta, parsePagination } from '../utils/pagination.js'
 import { USER_PUBLIC_ATTRIBUTES } from '../models/User.js'
+import { lockEditableCart } from '../utils/cartLock.js'
+import { sendResult } from '../utils/sendResult.js'
 
 // Read from the model so this list can't drift from the ENUM.
 const CART_STATUSES = Cart.getAttributes().status.values
@@ -175,20 +177,10 @@ export async function addCartBuyer(req, res) {
         }
 
         const result = await sequelize.transaction(async (transaction) => {
-            const cart = await Cart.findByPk(cartId, {
-                transaction,
-                lock: transaction.LOCK.UPDATE,
-            })
+            const { cart, response } = await lockEditableCart(cartId, transaction)
 
-            if (!cart) {
-                return { status: 404, body: { error: `Cart ${cartId} not found` } }
-            }
-
-            if (cart.status !== 'in_progress') {
-                return {
-                    status: 409,
-                    body: { error: `Cart ${cartId} is ${cart.status} and can't be changed` },
-                }
+            if (response) {
+                return response
             }
 
             const user = await User.findByPk(userId, {
@@ -207,11 +199,7 @@ export async function addCartBuyer(req, res) {
             return { status: 204 }
         })
 
-        if (result.status === 204) {
-            return res.status(204).end()
-        }
-
-        return res.status(result.status).json(result.body)
+        return sendResult(res, result)
     } catch (error) {
         console.error('Failed to add cart buyer: ', error)
         return res.status(500).json({
@@ -232,20 +220,10 @@ export async function removeCartBuyer(req, res) {
         }
 
         const result = await sequelize.transaction(async (transaction) => {
-            const cart = await Cart.findByPk(cartId, {
-                transaction,
-                lock: transaction.LOCK.UPDATE,
-            })
+            const { cart, response } = await lockEditableCart(cartId, transaction)
 
-            if (!cart) {
-                return { status: 404, body: { error: `Cart ${cartId} not found` } }
-            }
-
-            if (cart.status !== 'in_progress') {
-                return {
-                    status: 409,
-                    body: { error: `Cart ${cartId} is ${cart.status} and can't be changed` },
-                }
+            if (response) {
+                return response
             }
 
             if (!(await cart.hasBuyer(userId, { transaction }))) {
@@ -267,11 +245,7 @@ export async function removeCartBuyer(req, res) {
             return { status: 204 }
         })
 
-        if (result.status === 204) {
-            return res.status(204).end()
-        }
-
-        return res.status(result.status).json(result.body)
+        return sendResult(res, result)
     } catch (error) {
         console.error('Failed to remove cart buyer: ', error)
         return res.status(500).json({
