@@ -7,3 +7,10 @@ export function parseId(value) {
     const id = Number(value)
     return Number.isInteger(id) && id > 0 && id <= MAX_INTEGER ? id : null
 }
+
+// JSON bodies keep their types, so an ID must arrive as a number: true or
+// "5" is a client bug, not an ID. undefined/null mean "not provided".
+export function parseBodyId(value) {
+    if (value === undefined || value === null) { return undefined }
+    return typeof value === 'number' ? parseId(value) : null
+}
