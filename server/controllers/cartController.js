@@ -253,3 +253,74 @@ export async function removeCartBuyer(req, res) {
         })
     }
 }
+
+export async function updateCart(req, res) {
+    try {
+        const cartId = parseId(req.params.id)
+
+        if (!cartId) {
+            return res.status(400).json({
+                error: 'Cart ID must be a positive integer'
+            })
+        }
+
+        const body = req.body ?? {}
+
+        // Strict: silently ignoring e.g. { status: 'completed' } would let a
+        // client think it changed something it can't.
+        const unknownFields = Object.keys(body).filter((key) => key !== 'customerId')
+
+        if (unknownFields.length > 0) {
+            return res.status(400).json({
+                error: `Only customerId can be updated (got: ${unknownFields.join(', ')})`
+            })
+        }
+
+        if (body.customerId === undefined) {
+            return res.status(400).json({
+                error: 'customerId is required (use null to clear it)'
+            })
+        }
+
+        // null clears the customer; anything else must be a valid ID.
+        let customerId = null
+
+        if (body.customerId !== null) {
+            customerId = parseBodyId(body.customerId)
+
+            if (!customerId) {
+                return res.status(400).json({
+                    error: 'customerId must be a positive integer or null'
+                })
+            }
+        }
+
+        const result = await sequelize.transaction(async (transaction) => {
+            const { cart, response } = await lockEditableCart(cartId, transaction)
+
+            if (response) {
+                return response
+            }
+
+            if (customerId !== null &&
+                !(await Customer.findByPk(customerId, { transaction }))) {
+                return {
+                    status: 400,
+                    body: { error: `Customer ${customerId} does not exist` },
+                }
+            }
+
+            cart.customerId = customerId
+            await cart.save({ transaction })
+
+            return { status: 200, body: { cart } }
+        })
+
+        return sendResult(res, result)
+    } catch (error) {
+        console.error('Failed to update cart: ', error)
+        return res.status(500).json({
+            error: 'Failed to update cart'
+        })
+    }
+}
