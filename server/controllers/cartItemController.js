@@ -4,14 +4,11 @@ import { Card, CartItem } from '../models/index.js'
 import { lockEditableCart } from '../utils/cartLock.js'
 import { sendResult } from '../utils/sendResult.js'
 import { parseBodyId, parseId } from '../utils/parseId.js'
+import { parseMoney } from '../utils/money.js'
 
 // Read from the model so this list can't drift from the ENUM.
 const CONDITIONS = CartItem.getAttributes().condition.values
-const MAX_PRICE_CENTS = 9999999999 // DECIMAL(10, 2) max: 99,999,999.99
 
-// Money arrives as a JSON number. Work in whole cents so float noise
-// (0.29 * 100 = 28.999...) can't slip in, and reject more than 2 decimals.
-// Returns a "3.50"-style string for the DECIMAL column, or null if invalid.
 function parseOfferPrice(value) {
     if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
         return null
@@ -160,7 +157,7 @@ function validateItemFields(body, { partial }) {
     }
 
     if (shouldCheck('offerPrice')) {
-        const offerPrice = parseOfferPrice(body.offerPrice)
+        const offerPrice = parseMoney(body.offerPrice)
 
         if (offerPrice === null) {
             return {
