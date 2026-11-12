@@ -324,3 +324,38 @@ export async function updateCart(req, res) {
         })
     }
 }
+
+export async function deleteCart(req, res) {
+    try {
+        const cartId = parseId(req.params.id)
+
+        if (!cartId) {
+            return res.status(400).json({
+                error: 'cartId must be a positive integer'
+            })
+        }
+
+        const result = await sequelize.transaction(async (transaction) => {
+            // Only in-progress carts can be deleted, completed ones are
+            // a purchase record.
+            const { cart, response } = await lockEditableCart(cartId, transaction)
+
+            if (response) {
+                return response
+            }
+
+            // ON DELETE CASCADE removes the cart's cart_items and cart_buyers
+            // rows in the same statement.
+            await cart.destroy({ transaction })
+
+            return { status: 204 }
+        })
+
+        return sendResult(res, result)
+    } catch (error) {
+        console.error('Failed to delete cart: ', error)
+        return res.status(500).json({
+            error: 'Failed to delete cart'
+        })
+    }
+}
