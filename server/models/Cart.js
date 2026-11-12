@@ -17,7 +17,7 @@ Cart.init(
         },
 
         status: {
-            type: DataTypes.ENUM('in_progress', 'completed', 'abandoned'),
+            type: DataTypes.ENUM('in_progress', 'completed'),
             defaultValue: 'in_progress',
             allowNull: false,
         },

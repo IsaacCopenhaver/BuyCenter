@@ -21,6 +21,13 @@ BuyTransaction.init(
             allowNull: false,
         },
 
+        // What the customer actually receives (e.g. with a store-credit
+        // bonus); can differ from totalPrice. Both come from the client.
+        payoutAmount: {
+            type: DataTypes.DECIMAL(10, 2),
+            allowNull: false,
+        },
+
         paymentType: {
             type: DataTypes.ENUM('cash', 'check', 'store_credit'),
             allowNull: false,
