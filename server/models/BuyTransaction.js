@@ -29,7 +29,7 @@ BuyTransaction.init(
         },
 
         paymentType: {
-            type: DataTypes.ENUM('cash', 'check', 'store_credit'),
+            type: DataTypes.ENUM('bank_transfer', 'store_credit'),
             allowNull: false,
         },
 
