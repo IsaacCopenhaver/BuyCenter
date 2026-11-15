@@ -7,7 +7,7 @@ export async function getUsers(req, res) {
         const pagination = parsePagination(req.query)
 
         if (!pagination) {
-            res.status(400).json({
+            return res.status(400).json({
                 error: 'Invalid pagination parameters'
             })
         }
@@ -19,7 +19,7 @@ export async function getUsers(req, res) {
             limit,
             offset,
             // Alphabetical for a picker; id breaks ties between same names.
-            order: [['lastName', 'ASC'], ['firstName', 'ASC']],
+            order: [['lastName', 'ASC'], ['firstName', 'ASC'], ['id', 'ASC']],
         })
 
         return res.json({
