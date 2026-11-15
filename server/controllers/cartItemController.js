@@ -271,7 +271,7 @@ export async function deleteCartItem(req, res) {
             if (response) {
                 return response
             }
-            
+
             // One DELETE ... WHERE id AND cartId; returns how many rows it removed.
             // Scoped to the cart, like PATCH.
             const deletedCount = await CartItem.destroy({

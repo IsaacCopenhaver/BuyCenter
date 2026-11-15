@@ -24,7 +24,7 @@ export async function createCart(req, res) {
                 error: `Customer ${customerId} does not exist`
             })
         }
-        
+
         const requestedBuyerIds = req.body?.buyerIds ?? []
 
         if (!Array.isArray(requestedBuyerIds)) {
@@ -127,14 +127,14 @@ export async function getCarts(req, res) {
         const { page, limit, offset } = pagination
         const { status } = req.query
 
-        if (status !== undefined && 
-            status !== '' && 
+        if (status !== undefined &&
+            status !== '' &&
             !CART_STATUSES.includes(status)) {
                 return res.status(400).json({
                     error: `status must be one of: ${CART_STATUSES.join(', ')}`
                 })
             }
-        
+
         const where = {}
 
         if (status) {

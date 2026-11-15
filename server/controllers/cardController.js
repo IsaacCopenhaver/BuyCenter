@@ -14,7 +14,7 @@ function escapeLike(value) {
 export async function getCards(req, res) {
     try {
         const pagination = parsePagination(req.query)
-        
+
         if (!pagination) {
             return res.status(400).json({
                 error: 'Invalid pagination parameters'
@@ -22,7 +22,7 @@ export async function getCards(req, res) {
         }
 
         const { page, limit, offset } = pagination
-         
+
         const q = req.query.q
 
         if (q !== undefined && typeof q !== 'string') {
