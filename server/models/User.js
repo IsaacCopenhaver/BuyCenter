@@ -41,5 +41,7 @@ User.init(
     }
 )
 
-export default User
+// The only user fields an API response may include. Never passwordHash.
+export const USER_PUBLIC_ATTRIBUTES = ['id', 'firstName', 'lastName', 'email']
 
+export default User

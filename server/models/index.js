@@ -17,10 +17,10 @@ Card.belongsTo(CardSet, { foreignKey: 'setId' })
 
 // One customer can have many carts
 Customer.hasMany(Cart, { foreignKey: 'customerId' })
-Cart.belongsTo(Customer, { foreignKey: 'customerId' })
+Cart.belongsTo(Customer, { foreignKey: 'customerId', as: 'customer' })
 
 // One cart has many cart items
-Cart.hasMany(CartItem, { foreignKey: 'cartId' })
+Cart.hasMany(CartItem, { foreignKey: 'cartId', as: 'items' })
 CartItem.belongsTo(Cart, { foreignKey: 'cartId' })
 
 // One card can appear in many cart items
@@ -41,19 +41,24 @@ Cart.belongsToMany(User, {
   as: 'buyers',
 });
 
+// Transactions are financial records: deleting a customer, cart, or user
+// must never delete them as a side effect. RESTRICT makes the DB refuse
+// the delete while a transaction still references the row.
+
 // One customer can have many buy transactions
-Customer.hasMany(BuyTransaction, { foreignKey: 'customerId' })
-BuyTransaction.belongsTo(Customer, { foreignKey: 'customerId' })
+Customer.hasMany(BuyTransaction, { foreignKey: 'customerId', onDelete: 'RESTRICT' })
+BuyTransaction.belongsTo(Customer, { foreignKey: 'customerId', onDelete: 'RESTRICT' })
 
 // A cart is checked out at most once
-Cart.hasOne(BuyTransaction, { foreignKey: 'cartId' })
-BuyTransaction.belongsTo(Cart, { foreignKey: 'cartId' })
+Cart.hasOne(BuyTransaction, { foreignKey: 'cartId', onDelete: 'RESTRICT' })
+BuyTransaction.belongsTo(Cart, { foreignKey: 'cartId', onDelete: 'RESTRICT' })
 
 // One user can complete many buy transactions
-User.hasMany(BuyTransaction, { foreignKey: 'completedById' })
+User.hasMany(BuyTransaction, { foreignKey: 'completedById', onDelete: 'RESTRICT' })
 BuyTransaction.belongsTo(User, {
     foreignKey: 'completedById',
     as: 'completedBy',
+    onDelete: 'RESTRICT',
 })
 
 export { User, Game, CardSet, Card, Cart, Customer, CartItem, BuyTransaction }
