@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { addCartBuyer, createCart, getCart, getCarts, removeCartBuyer, updateCart, deleteCart } from '../controllers/cartController.js'
 import { addCartItem, updateCartItem, deleteCartItem } from '../controllers/cartItemController.js'
+import { checkoutCart } from '../controllers/checkoutController.js'
 
 const router = Router()
 
@@ -14,5 +15,6 @@ router.put('/:id/buyers/:userId', addCartBuyer)
 router.delete('/:id/buyers/:userId', removeCartBuyer)
 router.patch('/:id', updateCart)
 router.delete('/:id', deleteCart)
+router.post('/:id/transaction', checkoutCart)
 
 export default router
