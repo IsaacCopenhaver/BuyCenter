@@ -9,20 +9,6 @@ import { parseMoney } from '../utils/money.js'
 // Read from the model so this list can't drift from the ENUM.
 const CONDITIONS = CartItem.getAttributes().condition.values
 
-function parseOfferPrice(value) {
-    if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
-        return null
-    }
-
-    const cents = Math.round(value * 100)
-
-    if ((Math.abs(value * 100 - cents) > 1e-6) || cents > MAX_PRICE_CENTS) {
-        return null
-    }
-
-    return (cents / 100).toFixed(2)
-}
-
 export async function updateCartItem(req, res) {
     try {
         const cartId = parseId(req.params.id)
