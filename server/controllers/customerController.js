@@ -3,6 +3,7 @@ import { Customer } from '../models/index.js'
 import { CUSTOMER_ATTRIBUTES } from '../models/Customer.js'
 import { escapeLike } from '../utils/escapeLike.js'
 import { paginationMeta, parsePagination } from '../utils/pagination.js'
+import { parseId } from '../utils/parseId.js'
 
 const MAX_Q_LENGTH = 100
 
@@ -81,6 +82,35 @@ export async function getCustomers(req, res) {
         console.error('Failed to fetch customers:', error)
         return res.status(500).json({
             error: 'Failed to fetch customers'
+        })
+    }
+}
+
+export async function getCustomer(req, res) {
+    try {
+        const id = parseId(req.params.id)
+
+        if (!id) {
+            return res.status(400).json({
+                error: 'Customer ID must be a positive integer'
+            })
+        }
+
+        const customer = await Customer.findByPk(id, {
+            attributes: CUSTOMER_ATTRIBUTES,
+        })
+
+        if (!customer) {
+            return res.status(404).json({
+                error: `Customer ${id} not found`
+            })
+        }
+
+        return res.json({ customer })
+    } catch (error) {
+        console.error('Failed to fetch customer:', error)
+        return res.status(500).json({
+            error: 'Failed to fetch customer'
         })
     }
 }
