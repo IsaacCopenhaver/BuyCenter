@@ -42,4 +42,10 @@ Customer.init(
     }
 )
 
+// The customer fields API responses include -- the shape the client's
+// store already uses.
+export const CUSTOMER_ATTRIBUTES = [
+    'id', 'shopifyCustomerId', 'firstName', 'lastName', 'phoneNumber', 'email',
+]
+
 export default Customer
