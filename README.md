@@ -101,9 +101,10 @@ Postgres like DigitalOcean Managed Databases but will fail against a stock
 local Postgres, since that ships with SSL off. Point `DATABASE_URL` at a hosted
 database, or make that option conditional.
 
-There are no migrations. `server/index.js` runs `sequelize.sync({ alter: true })`
-on every boot, so the schema follows the models automatically in development.
-See the gaps below before running that against anything you care about.
+There are no migrations. `sequelize.sync({ alter: true })` only runs when
+`DB_SYNC=true`, because `DATABASE_URL` points at a shared database. Schema
+changes to the shared dev database are applied by hand and listed in each PR's
+migration notes; the model files remain the source of truth for the schema.
 
 ### The shape of a buy
 
@@ -131,8 +132,8 @@ Two details that shape the UI more than they look like they should:
   always 1 and its "condition" is its grade.
 
 Checkout writes a **BuyTransaction** against the cart -- one per cart, enforced
-by a unique `cartId` -- recording `totalPrice`, `paymentType` (`cash`, `check`,
-or `store_credit`), and the `completedById` user.
+by a unique `cartId` -- recording `totalPrice`, `payoutAmount`, `paymentType` (`bank_transfer` or
+`store_credit`), and the `completedById` user.
 
 ## API
 
@@ -144,9 +145,34 @@ Everything is mounted under `/api`.
 | `GET /api/auth/me` | session | 401 is the normal "not signed in" answer |
 | `POST /api/auth/logout` | public | idempotent on purpose |
 | `GET /api/cards` | session | paginated: `?page=1&limit=10`, max limit 100 |
+| `GET /api/users` | session | paginated; public fields only |
+| `GET /api/customers` | session | paginated; `?q=` searches name, email, and phone (see below) |
+| `GET /api/customers/:id` | session | `{ customer }` |
+| `POST /api/customers` | session | `firstName`, `lastName`, and `phoneNumber` or `email`; 409 on a duplicate email or phone |
+| `GET /api/carts` | session | paginated |
+| `POST /api/carts` | session | the creator is added as a buyer; `customerId` optional |
+| `GET /api/carts/:id` | session | with customer, items, and buyers |
+| `PATCH /api/carts/:id` | session | change or clear `customerId` |
+| `DELETE /api/carts/:id` | session | in-progress carts only |
+| `POST /api/carts/:id/items` | session | merges into a matching card/printing/condition/price line |
+| `PATCH /api/carts/:id/items/:itemId` | session | may merge into a matching line |
+| `DELETE /api/carts/:id/items/:itemId` | session | |
+| `PUT /api/carts/:id/buyers/:userId` | session | idempotent |
+| `DELETE /api/carts/:id/buyers/:userId` | session | a cart keeps at least one buyer |
+| `POST /api/carts/:id/transaction` | session | checkout: writes a BuyTransaction and completes the cart |
 
-Carts, customers, and transactions have models but no endpoints yet -- the
-client side of those is still running on dummy data.
+Errors are `{ "error": "message" }`. Completed carts can be read but not changed.
+The client still runs carts and customers on dummy data; wiring it to these
+endpoints is the next step.
+
+**Customer search.** `q` is split into words, and every word must match the
+first name, last name, email, or phone, so `john smith`, `smith, john`, and
+`john 4567` all find John Smith. Phones compare digits only, so any typed
+format matches any stored format.
+
+**Customers created in BuyCenter** are saved locally with
+`shopifyCustomerId: null`, meaning "not in Shopify yet". Creating them in
+Shopify is part of the later Shopify customer sync.
 
 ## Client
 
@@ -249,8 +275,8 @@ The counter workflow the cart page is built around, in the order it happens:
 1. **Open a cart** against a customer. A walk-in with no record can be created
    inline on that form -- leaving the page would lose the half-started cart.
    A new customer needs a first and last name, plus a phone number or an
-   email (either alone is fine) -- enforced in the form only; the Customer
-   model does not check it yet.
+   email (either alone is fine) -- enforced in the form and by
+   `POST /api/customers`.
    Assign the staff working it; the person starting it is pre-assigned.
 2. **Find each card.** Search matches name, collector number, set, printing,
    rarity, and cert number. Rows carry a thumbnail (hover or focus it for a
@@ -404,29 +430,33 @@ anonymous caller if someone deliberately moves it above the guard.
 
 ## Known gaps
 
-- **No cart API.** `Cart`, `CartItem`, `Customer`, and `BuyTransaction` have
-  models and associations but no routes or controllers, so the entire cart
-  flow in the client runs on the dummy store described above.
+- **The client is not wired to the cart and customer APIs yet.** The
+  endpoints exist; the cart flow in the client still runs on the dummy store
+  described above.
 - **Sessions are in-memory.** `express-session` uses its default MemoryStore,
   so every server restart signs everyone out, and it leaks memory under real
   use. `connect-pg-simple` over the existing Postgres connection is the fix.
-- **`sync({ alter: true })` runs on every boot.** Fine in development; against
-  a production database it means Sequelize issues `ALTER`s at startup to match
-  the models. Gate it behind `NODE_ENV` or adopt migrations before deploying.
+- **No migrations.** `sync({ alter: true })` is opt-in (`DB_SYNC=true`), but
+  running it repeatedly adds a duplicate unique index per `unique: true`
+  column on every run (the shared dev database has 61 on `users` and 47 on
+  `customers`). Create production tables once, or adopt migrations, before
+  deploying.
 - **`Card` has no `printing` column.** The client can switch a line between
   printings, but the server model cannot store which one, and `CartItem`
   records only `cardId` -- so that choice has nowhere to land until `Card`
   gains the column and the catalog mirror populates it.
-- **`paymentType` cannot hold a split.** It is a single `ENUM` on
-  `BuyTransaction`, but the UI lets a buy be paid across cash, check, and
-  store credit at once. The dummy transaction stores an `allocation` object
-  and writes the largest slice into the ENUM so the column still has a valid
-  value -- lossy, and flagged in the code. A related `payments` table is the
-  real fix, and it would also give the store-credit bonus somewhere to live.
-- **New customers have a placeholder Shopify id.** `shopifyCustomerId` is
-  `NOT NULL` and unique, but a real one only exists once Shopify has been
-  told about the customer. Customers created at the counter get a
-  `local:pending/<id>` value and need a sync that does not exist yet.
+- **`paymentType` cannot hold a split.** It is a single `ENUM`
+  (`bank_transfer`, `store_credit`) on `BuyTransaction`, but the UI lets a buy
+  be paid across several methods at once. The dummy transaction stores an
+  `allocation` object and writes the largest slice into the ENUM -- lossy, and
+  flagged in the code. How to handle split payments is still undecided.
+- **No Shopify customer sync yet.** Customers created in BuyCenter have
+  `shopifyCustomerId: null` until a sync creates them in Shopify, and
+  customers created in Shopify do not reach BuyCenter yet.
+- **Duplicate customer check is not race-proof.** `POST /api/customers`
+  checks for an existing email or phone, then inserts; two simultaneous
+  requests for the same person could both pass. Phone duplicates compare
+  digits exactly, so `555-123-4567` and `+1 555 123 4567` are not caught yet.
 - **No customers page.** Customers can be created inline when opening a cart,
   but there is nowhere to list, search, or edit them afterwards. The
   dashboard's Customers tile lands on the cart list.

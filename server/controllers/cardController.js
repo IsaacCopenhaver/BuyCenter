@@ -2,14 +2,9 @@ import { Op } from 'sequelize'
 import { Card, CardSet } from '../models/index.js'
 import { parseId } from '../utils/parseId.js'
 import { paginationMeta, parsePagination } from '../utils/pagination.js'
+import { escapeLike } from '../utils/escapeLike.js'
 
 const MAX_Q_LENGTH = 100
-
-// Postgres LIKE treats % and _ as wildcards and \ as its escape character.
-// Escape all three so a user's input matches literally.
-function escapeLike(value) {
-    return value.replace(/[\\%_]/g, '\\$&')
-}
 
 export async function getCards(req, res) {
     try {

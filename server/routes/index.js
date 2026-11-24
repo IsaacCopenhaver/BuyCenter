@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/requireAuth.js'
 import cardsRouter from './cards.js'
 import cartsRouter from './carts.js'
 import usersRouter from './users.js'
+import customersRouter from './customers.js'
 
 // Every API endpoint hangs off this router.
 const router = Router()
@@ -26,5 +27,8 @@ router.use('/carts', cartsRouter)
 
 // Protected user routes
 router.use('/users', usersRouter)
+
+// Protected customer routes
+router.use('/customers', customersRouter)
 
 export default router

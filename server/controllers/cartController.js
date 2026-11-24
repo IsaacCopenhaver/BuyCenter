@@ -5,6 +5,7 @@ import { paginationMeta, parsePagination } from '../utils/pagination.js'
 import { USER_PUBLIC_ATTRIBUTES } from '../models/User.js'
 import { lockEditableCart } from '../utils/cartLock.js'
 import { sendResult } from '../utils/sendResult.js'
+import { CUSTOMER_ATTRIBUTES } from '../models/Customer.js'
 
 // Read from the model so this list can't drift from the ENUM.
 const CART_STATUSES = Cart.getAttributes().status.values
@@ -85,7 +86,7 @@ export async function getCart(req, res) {
 
         const cart = await Cart.findByPk(id, {
             include: [
-                { model: Customer, as: 'customer' },
+                { model: Customer, as: 'customer', attributes: CUSTOMER_ATTRIBUTES },
                 { model: CartItem, as: 'items'},
                 {
                     model: User,
