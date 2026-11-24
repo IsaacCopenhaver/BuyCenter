@@ -11,6 +11,12 @@ const MAX_TEXT_LENGTH = 255
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_PATTERN = /^[\d\s()+.-]+$/
 
+// The stored phone with everything but digits removed, so "(555) 123-4567"
+// and "555.123.4567" compare as the same number.
+function phoneDigits() {
+    return fn('regexp_replace', col('phoneNumber'), '[^0-9]', '', 'g')
+}
+
 // Each word must match at least one field, so "john smith", "smith, john"
 // and "john 4567" all find John Smith. Phones compare digits only, so any
 // typed format matches any stored format.
@@ -29,12 +35,7 @@ function buildSearchWhere(search) {
             const digits = word.replace(/\D/g, '')
 
             if (digits) {
-                matches.push(
-                    where(
-                        fn('regexp_replace', col('phoneNumber'), '[^0-9]', '', 'g'),
-                        { [Op.like]: `%${digits}%` }
-                    )
-                )
+                matches.push(where(phoneDigits(), { [Op.like]: `%${digits}%` }))
             }
 
             return { [Op.or]: matches }
@@ -99,6 +100,27 @@ function parseNewCustomer(body) {
     }
 
     return { values }
+}
+
+// Shopify rejects a second customer with the same email or phone, so catch
+// it here instead of at sync time. Email compares case-insensitively, phone
+// by digits. Check-then-insert: two simultaneous requests could both pass.
+async function findDuplicateCustomer({ email, phoneNumber }) {
+    const conditions = []
+
+    if (email) {
+        conditions.push(where(fn('lower', col('email')), email))
+    }
+
+    if (phoneNumber) {
+        conditions.push(where(phoneDigits(), phoneNumber.replace(/\D/g, '')))
+    }
+
+    return Customer.findOne({
+        attributes: ['id', 'email'],
+        where: { [Op.or]: conditions },
+        order: [['id', 'ASC']],
+    })
 }
 
 export async function getCustomers(req, res) {
@@ -184,6 +206,18 @@ export async function createCustomer(req, res) {
 
         if (error) {
             return res.status(400).json({ error })
+        }
+
+        const duplicate = await findDuplicateCustomer(values)
+
+        if (duplicate) {
+            const field = values.email && duplicate.email?.toLowerCase() === values.email
+                ? 'email'
+                : 'phone number'
+
+            return res.status(409).json({
+                error: `Customer ${duplicate.id} already has this ${field}`
+            })
         }
 
         const created = await Customer.create(values)
